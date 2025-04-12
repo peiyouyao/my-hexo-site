@@ -1,0 +1,861 @@
+---
+title: LeetCode 151-200
+date: 1989-06-04 00:00:00
+tags: leetcode
+categories: algorithm
+---
+
+---
+
+## [151. Reverse Words in a String](https://leetcode.com/problems/reverse-words-in-a-string/) [String]
+
+
+
+## [152. Maximum Product Subarray](https://leetcode.com/problems/maximum-product-subarray/)
+
+与 53 对比
+
+暴力 DP 这样做跟暴力枚举也差不多了
+
+```java
+class Solution {
+    public int maxProduct(int[] nums) {
+        int[] dp = new int[nums.length]; // subarrs(nums:[0,i], endwith=true) 中的最大乘积
+        int res = nums[0];
+        dp[0] = nums[0];
+        for (int i = 1; i < nums.length; i ++) {
+            dp[i] = nums[i];
+            int tmp = dp[i];
+            for (int j = i - 1; j > -1; j --) {
+                tmp *= nums[j];
+                dp[i] = Math.max(dp[i], tmp);
+            }
+            res = Math.max(dp[i], res);
+        }
+        return res;
+    }
+}
+```
+
+更优秀的 DP
+
+```java
+class Solution {
+    private int max(int... nums) {
+        int max = Integer.MIN_VALUE;
+        for (int num: nums) max = Math.max(max, num);
+        return max;
+    }
+
+    private int min(int... nums) {
+        int min = Integer.MAX_VALUE;
+        for (int num: nums) min = Math.min(min, num);
+        return min;
+    }
+
+    public int maxProduct(int[] nums) {
+        int[][] dp = new int[nums.length][2];
+        // dp[i][0]: subarrs(nums:[0,i], endwith=true) 中的最小乘积
+        // dp[i][1]: subarrs(nums:[0,i], endwith=true) 中的最大乘积
+        int res = nums[0];
+        dp[0][0] = nums[0];
+        dp[0][1] = nums[0];
+        for (int i = 1; i < nums.length; i ++) {
+            dp[i][0] = min(nums[i], nums[i] * dp[i-1][0], nums[i] * dp[i-1][1]);
+            dp[i][1] = max(nums[i], nums[i] * dp[i-1][0], nums[i] * dp[i-1][1]);
+            res = max(res, dp[i][0], dp[i][1]);
+        }
+        return res;
+    }
+}
+```
+
+
+
+## [153. Find Minimum in Rotated Sorted Array](https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/)
+
+```java
+class Solution {
+    private int findInRange(int[] nums, int l, int r) {
+        if (l + 1 >= r) return Math.min(nums[l], nums[r]);
+        int m = (l+r)/2;
+        if (nums[l] < nums[m]) { // nums:[l,m] 递增
+            int minLeft = nums[l];
+            int minRight = findInRange(nums, m+1, r);
+            return Math.min(minLeft, minRight);
+        } else { // nums:[m,r] 递增
+            int minLeft = findInRange(nums, l, m-1);
+            int minRight = nums[m];
+            return Math.min(minLeft, minRight);
+        }
+    }
+
+    public int findMin(int[] nums) {
+        return findInRange(nums, 0, nums.length-1);
+    }
+}
+```
+
+```java
+class Solution {
+    public int findMin(int[] nums) {
+        return search(nums, 0, nums.length - 1);
+    }
+    private int search(int[] nums, int l, int r) {
+        if (l + 1 >= r) return Math.min(nums[l], nums[r]);
+        int m = (l + r) / 2;
+        if (nums[l] < nums[m] && nums[m] < nums[r]) return nums[l];
+        else {
+            if (nums[l] < nums[m]) return search(nums, m, r);
+            if (nums[m] < nums[r]) return search(nums, l, m);
+        }
+        return 0;
+    }
+}
+```
+
+
+
+## [154. Find Minimum in Rotated Sorted Array II](https://leetcode.com/problems/find-minimum-in-rotated-sorted-array-ii/)
+
+```java
+class Solution {
+    private int findInRange(int[] nums, int l, int r) {
+        while (l + 1 != nums.length && nums[l+1] == nums[l]) l ++;  // 去重
+        while (r - 1 != -1 && nums[r-1] == nums[r]) r --;
+
+        if (l + 1 >= r) return Math.min(nums[l], nums[r]);
+
+        int m = (l + r)/2;
+        int minLeft = Integer.MAX_VALUE, minRight = Integer.MAX_VALUE;
+        if (nums[l] < nums[m]) {
+            minLeft = nums[l];
+            minRight = findInRange(nums, m+1, r);
+        } else {
+            minLeft = findInRange(nums, l, m-1);
+            minRight = nums[m];
+        }
+        return Math.min(minLeft, minRight);
+    }
+
+    public int findMin(int[] nums) {
+        return findInRange(nums, 0, nums.length-1);
+    }
+}
+```
+
+```java
+class Solution {
+    public int findMin(int[] nums) {
+        return search(nums, 0, nums.length - 1);
+    }
+
+    private int search(int[] nums, int l, int r) {
+        while (l + 1 != nums.length && nums[l + 1] == nums[l]) l ++;
+        while (r - 1 != -1 && nums[r - 1] == nums[r]) r --;
+        if (l + 1 >= r) return Math.min(nums[l], nums[r]);
+        int m = (l + r) / 2;
+        if (nums[l] <= nums[m] && nums[m] <= nums[r]) return nums[l];
+        if (nums[l] <= nums[m]) return search(nums, m, r);
+        if (nums[m] <= nums[r]) return search(nums, l, m);
+        return 0;
+    }
+}
+```
+
+
+
+## [155. Min Stack](https://leetcode.com/problems/min-stack/)
+
+```java
+class MinStack {
+    private List<Integer> stkVal;
+    private List<Integer> stkMin; // 用来记录每一步对应的最小值
+
+    public MinStack() {
+        stkVal = new ArrayList<>();
+        stkMin = new ArrayList<>();
+    }
+    
+    public void push(int val) {
+        stkVal.add(val);
+        if (stkMin.isEmpty()) stkMin.add(val);
+        else {
+            int curMin = Math.min(stkMin.getLast(), val);
+            stkMin.add(curMin);
+        }
+    }
+    
+    public void pop() {
+        stkVal.removeLast();
+        stkMin.removeLast();
+    }
+    
+    public int top() {
+        return stkVal.getLast();
+    }
+    
+    public int getMin() {
+        return stkMin.getLast();
+    }
+}
+```
+
+
+
+## 156 - 159 ...
+
+
+
+## [160. Intersection of Two Linked Lists](https://leetcode.com/problems/intersection-of-two-linked-lists/) [List Node]
+
+
+
+## 161 ...
+
+
+
+## [162. Find Peak Element](https://leetcode.com/problems/find-peak-element/)
+
+```
+这个问题有点像导数: [a, b] 中, 
+如果 f'(a) * f'(b) < 0, 那么 存在 x0 in (a, b) s.t. f'(x0) == 0 且 f(x0) 局部最大
+如果 f'(a) * f'(b) > 0, 那么最大值 (峰值) 要么在 a 要么在 b
+```
+
+
+
+```java
+class Solution {
+    private int[] nums;
+
+    private int dl(int idx) {  // 左导数
+        if (idx == 0) return 1;
+        if (nums[idx] == nums[idx - 1]) return 0;
+        return (nums[idx] > nums[idx - 1]) ? 1 : -1;
+    }
+
+    private int dr(int idx) {  // 右导数
+        if (idx == nums.length-1) return -1;
+        if (nums[idx] == nums[idx + 1]) return 0;
+        return (nums[idx] > nums[idx + 1]) ? -1 : 1;
+    }
+
+    private boolean ispeak(int idx) {
+        return dl(idx) > 0 && dr(idx) < 0;
+    }
+
+    private int findInRange(int l, int r) {
+        if (ispeak(l)) return l;
+        if (ispeak(r)) return r;
+        if (l + 1 == r) return -1;
+        int m = (l+r) / 2;
+        if (ispeak(m)) return m;
+        // l, m, r 都不是peak, 那么必有 dl(l)=dr(l)=1, dl(r)=dr(r)=-1; dl(m)=dr(m) 同时为1或-1
+        if (dl(m) > 0) return findInRange(m+1, r);
+        if (dl(m) < 0) return findInRange(l, m-1);
+        return -1;
+    }
+
+    public int findPeakElement(int[] nums) {
+        this.nums = nums;
+        return findInRange(0, nums.length-1);
+    }
+}
+```
+
+## 163 ...
+
+
+
+## [164. Maximum Gap](https://leetcode.com/problems/maximum-gap/)
+
+**基数排序**
+
+```java
+class Solution {
+    public int maximumGap(int[] nums) {
+        if (nums.length < 2) return 0;
+        radixSort(nums);
+        int ans = nums[1] - nums[0];
+        for (int i = 2; i < nums.length; i ++) ans = Math.max(ans, nums[i] - nums[i - 1]);
+        return ans;
+    }
+    // 基数排序
+    private void radixSort(int[] nums) {
+        int max = Arrays.stream(nums).max().getAsInt(); // 找到最大值，确定最大位数
+        List<Integer>[] buckets = new LinkedList[10];
+        for (int i = 0; i < buckets.length; i ++) buckets[i] = new LinkedList<Integer>();
+        int exp = 1;
+        while (max / exp > 0) { // 按位排序
+            for (List<Integer> bucket : buckets) bucket.clear();
+            for (int num : nums) {
+                int bIdx = (num / exp) % 10; // 获取当前位的数字
+                List<Integer> bucket = buckets[bIdx];
+                bucket.addLast(num); // 将数字加入对应桶 尾插法 确保同一个桶中的元素按照上一位排列是降序的
+            }
+            int idx = 0;
+            for (List<Integer> bucket : buckets) {
+                while (!bucket.isEmpty()) {
+                    nums[idx] = bucket.removeFirst();
+                    idx ++;
+                }
+            }
+            exp *= 10;
+        }
+    }
+}
+```
+
+
+
+## [165. Compare Version Numbers](https://leetcode.com/problems/compare-version-numbers/)
+
+`split(".")` 会被认为是正则表达式
+
+```java
+class Solution {
+    public int compareVersion(String version1, String version2) {
+        String[] v1 = version1.split("\\.");
+        String[] v2 = version2.split("\\.");
+        return compare(v1, v2, 0);
+    }
+
+    private int compare(String[] v1, String[] v2, int idx) {
+        if (idx >= v1.length && idx > v2.length) return 0;
+        int n1 = idx >= v1.length ? 0 : Integer.parseInt(v1[idx]);
+        int n2 = idx >= v2.length ? 0 : Integer.parseInt(v2[idx]);
+        if (n1 < n2) return -1;
+        else if (n1 > n2) return 1;
+        else return compare(v1, v2, idx + 1);
+    }
+}
+```
+
+
+
+## [166. Fraction to Recurring Decimal](https://leetcode.com/problems/fraction-to-recurring-decimal/)
+
+```
+模拟思路 不断更新 dividend (被除数), divisor (除数), quotient (商), remainder (余数)
+d = q * ds + r
+
+eg: d = 4, ds = 333 (不变)
+
+ds  | d  | q | r
+333 | 4  | 0 | 4
+333 | 40 | 0 | 40
+333 | 400| 1 | 67
+333 | 670| 2 | 4 -> 循环开始 循环与 r 的重复出现有关, 故用字典记录每一次 r 的值和它的位置
+333 | 40 | 0 | 40
+...
+
+为什么要使用 long
+因为题目中有 ds = Integer.MIN_VALUE = -2^32 的情况
+-ds = 2^32 > 2^32-1 = Integer.MAX_VALUE (超了)
+必须使用 long
+```
+
+
+
+```java
+class Solution {
+    public String fractionToDecimal(int numerator, int denominator) {
+        String ans;
+        long d = Math.abs((long)numerator), ds = Math.abs((long)denominator); // 注意类型转换 !!!!!!!!
+        long intPart = d / ds;
+        d = d - ds * intPart;
+        if (d == 0) ans = String.valueOf(intPart);
+        else ans = String.valueOf(intPart) + floatPart(d, ds);
+        if (numerator < 0 && denominator > 0 || numerator > 0 && denominator < 0) return "-" + ans;
+        return ans;
+    }
+
+    private String floatPart(long d, long ds) {
+        StringBuilder ret = new StringBuilder();
+        Map<Long, Integer> rec = new HashMap<>();
+        while (true) {
+            long q = d / ds;
+            long r = d - ds * q;
+            
+            ret.append(String.valueOf(q));
+            if (r == 0) break;
+            if (rec.containsKey(r)) {
+                int pos = rec.get(r);
+                ret.insert(pos, '(');
+                ret.insert(ret.length(), ')');
+                break;
+            }
+            rec.put(r, ret.length());
+            d = r * 10;
+        }
+        ret.setCharAt(0, '.');
+        return ret.toString();
+    }
+}
+```
+
+
+
+## [167. Two Sum II - Input Array Is Sorted](https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/)
+
+规定了不能使用额外空间, 故不能使用 Hash, 因此考虑双指针
+
+```java
+class Solution {
+    public int[] twoSum(int[] numbers, int target) {
+        int l = 0, r = numbers.length - 1;
+        while (numbers[l] + numbers[r] != target) {
+            if (numbers[l] + numbers[r] > target) r --;
+            else l ++;
+        }
+        return new int[] {l+1, r+1};
+    }
+}
+```
+
+
+
+## [168. Excel Sheet Column Title](https://leetcode.com/problems/excel-sheet-column-title/)
+
+```java
+class Solution {
+    public String convertToTitle(int columnNumber) {
+        StringBuilder ans = new StringBuilder();
+        while (columnNumber > 0) {
+            int num = columnNumber % 26;
+            if (num == 0) {
+                ans.append('Z');
+                columnNumber = columnNumber / 26 - 1;
+            } else {
+                ans.append((char)('A' + num - 1));
+                columnNumber = columnNumber / 26;
+            }
+        }
+        return ans.reverse().toString();
+    }
+}
+```
+
+
+
+```java
+class Solution {
+    public String convertToTitle(int columnNumber) {
+        StringBuilder sb = new StringBuilder();
+        int dn = columnNumber - 1;
+        while (dn >= 0) {
+            sb.append((char)(dn % 26 + 'A'));
+            dn = dn / 26 - 1;
+        }
+        return sb.reverse().toString();
+    }
+}
+```
+
+对比提取各位数
+
+```java
+class Solution {
+    private void eachDigit(int n) {
+        StringBuilder sb = new StringBuilder();
+        while (true) {
+            sb.append((char)(n%10 + '0'));
+            n = n / 10;
+            if (n==0) break;
+        }
+        System.out.println(sb.reverse());
+    }
+}
+```
+
+以上两者没有联系, 因为本题不是26进制
+
+```
+假如研究的是26进制
+A -> 0 ...
+26 : BA
+```
+
+
+
+## [169. Majority Element](https://leetcode.com/problems/majority-element/)
+
+**莫尔投票**
+
+```java
+class Solution {
+    public int majorityElement(int[] nums) {
+        int maj = nums[0], cnt = 0;
+        for (int num : nums) {
+            if (maj != num) cnt --;
+            else cnt ++;
+
+            if (cnt == 0) {
+                maj = num;
+                cnt = 1;
+            }
+        }
+        return maj;
+    }
+}
+```
+
+
+
+## 170 ...
+
+
+
+## [171. Excel Sheet Column Number](https://leetcode.com/problems/excel-sheet-column-number/)
+
+```java
+class Solution {
+    public int titleToNumber(String columnTitle) {
+        int res = 0;
+        int q = 1;
+        for (int i = columnTitle.length()-1; i > -1; i --) {
+            char ch = columnTitle.charAt(i);
+            int val = (int)(ch - 'A') + 1;
+            res += val * q;
+            q *= 26;
+        }
+        return res;
+    }
+}
+```
+
+
+
+## [172. Factorial Trailing Zeroes](https://leetcode.com/problems/factorial-trailing-zeroes/)
+
+```
+for (int i = 1; i <= n; i ++) {
+    while (i % 10 == 0) {
+        System.out.println(i);  // 为什么这里死循环了
+        cnt10 ++;
+        i /= 10;
+    }
+}
+代码中会进入死循环的原因是 i /= 10 操作。当 i 是 10 的倍数时，例如 i = 10，i 会在 while 循环中被除以 10，变成 1，但是在 for 循环的下一次迭代时，它不会自增到 2，因为 i /= 10 改变了 i 的值，不会再按照预期从 1 增加到 2。因此，在满足条件时，i 会不断被除以 10，陷入死循环。
+
+n! 尾零的数量即为 n! 中因子 10 的个数，而 10=2×5，因此转换成求 n! 中质因子 2 的个数和质因子 5 的个数的较小值。由于质因子 5 的个数不会大于质因子 2 的个数（具体证明见方法二），我们可以仅考虑质因子 5 的个数。
+```
+
+```java
+class Solution {
+    public int trailingZeroes(int n) {
+        int cnt = 0;
+        int tmp = 1;
+        for (int i = 1; i <= n; i ++) {
+            int num = i;
+            while (num % 5 == 0) {
+                cnt ++;
+                num /= 5;
+            }
+        }
+
+        return cnt;
+    }
+}
+```
+
+```java
+class Solution {
+    public int trailingZeroes(int n) {
+        int cnt2 = 0;
+        int cnt5 = 0;
+        for (int nn = 1; nn <= n; nn ++) {
+            int num = nn;
+            while (num > 0 && num % 2 == 0) {
+                cnt2 ++;
+                num = num / 2;
+            }
+            while (num > 0 && num % 5 == 0) {
+                cnt5 ++;
+                num /= 5;
+            }
+        }
+        return Math.min(cnt2, cnt5);
+    }
+}
+```
+
+
+
+## [173. Binary Search Tree Iterator](https://leetcode.com/problems/binary-search-tree-iterator/)
+
+```java
+class BSTIterator {
+    private List<TreeNode> stk;
+    
+    public BSTIterator(TreeNode root) {
+        stk = new ArrayList<>();
+        stk.addLast(root);
+    }
+    
+    public int next() {
+        while (hasNext()) {
+            TreeNode cur = stk.removeLast();
+            if (cur != null) {
+                if (cur.right != null) stk.addLast(cur.right);
+                stk.add(cur);
+                stk.add(null);
+                if (cur.left != null) stk.addLast(cur.left);
+            } else {
+                cur = stk.removeLast();
+                return cur.val;
+            }
+        }
+        return 0;
+    }
+    
+    public boolean hasNext() {
+        return !stk.isEmpty();
+    }
+}
+```
+
+
+
+## [174. Dungeon Game](https://leetcode.com/problems/dungeon-game/)
+
+```java
+class Solution {
+    public int calculateMinimumHP(int[][] dungeon) {
+        int nr = dungeon.length, nc = dungeon[0].length;
+        int[][] dp = new int[nr+1][nc+1];
+        for (int i = 0; i <= nr; i ++) dp[i][nc] = Integer.MAX_VALUE;
+        for (int j = 0; j <= nc; j ++) dp[nr][j] = Integer.MAX_VALUE;
+        dp[nr][nc-1] = 1;
+        dp[nr-1][nc] = 1;
+        for (int i = nr - 1; i > -1; i --) {
+            for (int j = nc - 1; j > -1; j --) {
+                int min = Math.min(dp[i+1][j], dp[i][j+1]);
+                if (dungeon[i][j] > 0) {
+                    dp[i][j] = Math.max(min - dungeon[i][j], 1); // dp[i][j] + dun[i][j] = min && dp[i][j] >= 1
+                } else {
+                    dp[i][j] = min + (- dungeon[i][j]);
+                }
+                /*
+                dp[i][j] = Math.max(Math.min(dp[i+1][j], dp[i][j+1]) - dungeon[i][j], 1);
+                */
+            }
+        }
+        return dp[0][0];
+    }
+}
+```
+
+
+
+```java
+class Solution {
+    public int calculateMinimumHP(int[][] dungeon) {
+        int nr = dungeon.length, nc = dungeon[0].length;
+        int[][] dp = new int[nr][nc];
+        for (int i = nr - 1; i > -1; i --) {
+            for (int j = nc - 1; j > -1; j --) {
+                if (i == nr - 1 && j == nc - 1) {
+                    dp[i][j] = Math.max(1, 1 - dungeon[i][j]);
+                } else if (i == nr - 1) {
+                    dp[i][j] = Math.max(dp[i][j+1] - dungeon[i][j], 1);
+                } else if (j == nc - 1) {
+                    dp[i][j] = Math.max(dp[i+1][j] - dungeon[i][j], 1);
+                } else {
+                    dp[i][j] = Math.max(
+                    	Math.min(dp[i][j+1], dp[i+1][j]) - dungeon[i][j], 
+                    	1
+                    );
+                }
+            }
+        }
+        return dp[0][0];
+    }
+}
+```
+
+
+
+## 175 - 178 ...
+
+
+
+## [179. Largest Number](https://leetcode.com/problems/largest-number/)
+
+```java
+class Solution {
+    public String largestNumber(int[] nums) {
+        Integer[] numsArr = Arrays.stream(nums).boxed().toArray(Integer[]::new);
+        Arrays.sort(numsArr, (x, y) -> {
+            String s1 = String.valueOf(x) + String.valueOf(y);
+            String s2 = String.valueOf(y) + String.valueOf(x);
+            return -s1.compareTo(s2);
+        });
+        if (numsArr[0] == 0) return "0";
+        return Arrays.stream(numsArr).map(String::valueOf).collect(Collectors.joining(""));
+    }
+}
+```
+
+
+
+## 180 - 186 ...
+
+
+
+## [187. Repeated DNA Sequences](https://leetcode.com/problems/repeated-dna-sequences/)
+
+#### Java
+
+**长度固定**的子串很好处理
+
+```java
+class Solution {
+    public List<String> findRepeatedDnaSequences(String s) {
+        Map<String, Boolean> rec = new HashMap<>();
+        for (int i = 0; i <= s.length() - 10; i ++) {
+            String sub = s.substring(i, i + 10);
+            if (rec.containsKey(sub)) rec.put(sub, true);
+            else rec.put(sub, false);
+        }
+        return rec.entrySet().stream().filter(e -> e.getValue()).map(Map.Entry::getKey).collect(Collectors.toList());
+    }
+}
+```
+
+
+
+```java
+class Solution {
+    public List<String> findRepeatedDnaSequences(String s) {
+        int state = 0;
+        Map<Integer, Boolean> map = new HashMap<>();
+        List<String> ans = new ArrayList<>();
+        for (int i = 0; i < s.length(); i ++) {
+            char c = s.charAt(i);
+            int cval = 0;
+            switch (c) {
+                case 'A': cval = 0; break;
+                case 'C': cval = 1; break;
+                case 'G': cval = 2; break;
+                case 'T': cval = 3; break;
+            }
+            state = state << 2;
+            state = state | cval;
+            state = state & ((1 << 20) - 1);
+            if (i >= 9) {
+                if (!map.containsKey(state)) map.put(state, false);
+                else if (!map.get(state)) {
+                    map.put(state, true);
+                    ans.add(s.substring(i - 9, i + 1));
+                }
+            }
+        }
+        return ans;
+    }
+}
+```
+
+
+
+#### C++
+
+使用位运算来标记字符串的所有状态: 字符串由 ACGT 四个字母组成, 同时长度为10, 因此有 $4^{10} = 2^{20}$ 种状态, 可以使用一个 int 来标记. 同时, 哈希 int 的速度远快于哈希字符串, 因此可以提高效率
+
+```c++
+class Solution {
+public:
+    vector<string> findRepeatedDnaSequences(string s) {
+        vector<string> ans;
+        unordered_map<int, bool> umap;
+        int state = 0;
+        int VALID = (1 << 20) - 1; // 111 ... (20 个) ... 111 (2)
+        for (int i = 0; i < s.size(); i ++) {
+            char c = s[i];
+            int cval = 0;
+            switch (c) {
+                case 'A': cval = 0; break;
+                case 'C': cval = 1; break;
+                case 'G': cval = 2; break;
+                case 'T': cval = 3; break;
+            }
+            state = state << 2;
+            state = state | cval;
+            state = state & VALID; // 保存 state 的前 20 位
+            if (i >= 9) {
+                if (umap.find(state) == umap.end()) {
+                    umap.insert({state, false});
+                } else if (!umap[state]) {
+                    umap[state] = true;
+                    ans.push_back(s.substr(i - 9, 10));
+                }
+            }
+        }
+        return ans;
+    }
+};
+```
+
+
+
+## [188. Best Time to Buy and Sell Stock IV](https://leetcode.com/problems/best-time-to-buy-and-sell-stock-iv/) [DP]
+
+
+
+## [189. Rotate Array](https://leetcode.com/problems/rotate-array/) [Array]
+
+
+
+## [190. Reverse Bits](https://leetcode.com/problems/reverse-bits/)
+
+```java
+public class Solution {
+    // you need treat n as an unsigned value
+    public int reverseBits(int n) {
+        int res = 0;
+        for (int i = 0; i < 32; i ++) {
+            int bit = n&1;
+            // 将bit加到result的高位
+            res = (res << 1) | bit;
+            n >>= 1;
+        }
+        return res;
+    }
+}
+```
+
+
+
+## [191. Number of 1 Bits](https://leetcode.com/problems/number-of-1-bits/)
+
+```java
+class Solution {
+    public int hammingWeight(int n) {
+        int cnt = 0;
+        while (n > 0) {
+            if ((n&1) == 1) cnt ++;
+            n >>= 1;
+        }
+        return cnt;
+    }
+}
+```
+
+
+
+
+
+## 192 - 197 ...
+
+
+
+## [198. House Robber](https://leetcode.com/problems/house-robber/) [DP]
+
+
+
+## [199. Binary Tree Right Side View](https://leetcode.com/problems/binary-tree-right-side-view/) [Tree]
+
+
+
+## [200. Number of Islands](https://leetcode.com/problems/number-of-islands/) [Graph]

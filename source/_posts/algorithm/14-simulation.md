@@ -1,0 +1,159 @@
+---
+title: Simulate
+date: 2024-08-23 00:00:00
+tags: key-algorithm
+categories: algorithm
+---
+
+---
+
+# Examples
+
+## [657. Robot Return to Origin](https://leetcode.com/problems/robot-return-to-origin/)
+
+#### Java
+
+```java
+class Solution {
+    public boolean judgeCircle(String moves) {
+        int xOffset = 0, yOffset = 0;
+        for (char move : moves.toCharArray()) {
+            switch (move) {
+                case 'U': yOffset ++; break;
+                case 'D': yOffset --; break;
+                case 'R': xOffset ++; break;
+                case 'L': xOffset --; break;
+            }
+        }
+        return xOffset == 0 && yOffset == 0;
+    }
+}
+```
+
+#### Rust
+
+```rust
+impl Solution {
+    pub fn judge_circle(moves: String) -> bool {
+        let mut x_offset = 0;
+        let mut y_offset = 0;
+        for ch in moves.chars() {
+            match ch {
+                'U' => y_offset += 1,
+                'D' => y_offset -= 1,
+                'R' => x_offset += 1,
+                'L' => x_offset -= 1,
+                _ => (),
+            }
+        }
+        x_offset == 0 && y_offset == 0
+    }
+}
+```
+
+
+
+
+
+## [31. Next Permutation](https://leetcode.com/problems/next-permutation/)
+
+```java
+class Solution {
+    private void swap(int[] nums, int i, int j) {
+        int t = nums[i]; nums[i] = nums[j]; nums[j] = t;
+    }
+
+    private void reverse(int[] nums, int i, int j) {
+        while (i < j) {
+            swap(nums, i, j); i ++; j--;
+        }
+    }
+
+    public void nextPermutation(int[] nums) {
+        int len = nums.length;
+        
+        // 计算 breakIdx
+        int breakIdx = len - 2;
+        while (breakIdx > -1) {
+            if (nums[breakIdx] < nums[breakIdx + 1]) break;
+            breakIdx --;
+        }  // breakIdx 定义: 从尾到头, 一次出现 nums[i] < nums[i + 1] 的位置 (i)
+		
+        // 当 breakIdx == -1, 也就是数列是单调递减时, 直接reverse breakIdx 右边的部分 (整个数列)
+        if (breakIdx == -1) {
+            reverse(nums, 0, len - 1);
+            return;
+        }
+		
+        // 当 breakIdx>-1, 寻找breakIdx右边 >breakVal 的最小值的位置 (swapIdx), 交换二者的位置, 再翻转 breakIdx 右边
+        int breakVal = nums[breakIdx];
+        int swapIdx = breakIdx + 1;
+        int swapVal = nums[swapIdx];  // 根据 breakIdx 定义, 当前 swapVal 一定 > breakVal
+        for (int i = breakIdx + 1; i < len; i ++) {
+            if (nums[i] <= breakVal) continue; // breakVal 前提要 > breakVal 才考虑
+            if (nums[i] <= swapVal) {  // 要使用 <= , swapIdx 要尽量靠近尾部
+                swapIdx = i;
+                swapVal = nums[i];
+            }
+        }
+        swap(nums, breakIdx, swapIdx);
+        reverse(nums, breakIdx + 1, len - 1);
+        return;
+    }
+}
+```
+
+## [463. Island Perimeter](https://leetcode.com/problems/island-perimeter/)
+
+#### Java
+
+```java
+class Solution {
+    private int delta(int[][] grid, int i, int j) {
+        int rows = grid.length;
+        int cols = grid[0].length;
+        int res = 0;
+        if (i == 0      || grid[i-1][j] == 0) res ++;
+        if (i == rows-1 || grid[i+1][j] == 0) res ++;
+        if (j == 0      || grid[i][j-1] == 0) res ++;
+        if (j == cols-1 || grid[i][j+1] == 0) res ++;
+        return res;
+    }
+
+    public int islandPerimeter(int[][] grid) {
+        int cnt = 0;
+        for (int i = 0; i < grid.length; i ++) {
+            for (int j = 0; j < grid[0].length; j ++) {
+                if (grid[i][j] == 0) continue;
+                cnt += delta(grid, i, j);
+            }
+        }
+        return cnt;
+    }
+}
+```
+
+#### Rust
+
+```rust
+impl Solution {
+    pub fn island_perimeter(grid: Vec<Vec<i32>>) -> i32 {
+        let m = grid.len();
+        let n = grid[0].len();
+        let mut cnt = 0;
+        for i in 0..m {
+            for j in 0..n {
+                if grid[i][j] == 1 {
+                    cnt += 
+                    if i as i32 - 1 == -1 || grid[i - 1][j] == 0 { 1 } else { 0 } + 
+                    if i + 1 == m || grid[i + 1][j] == 0 { 1 } else { 0 } + 
+                    if j as i32 - 1 == -1 || grid[i][j - 1] == 0 { 1 } else { 0 } + 
+                    if j + 1 == n || grid[i][j + 1] == 0 { 1 } else { 0 };
+                }
+            }
+        }
+        cnt
+    }
+}
+```
+

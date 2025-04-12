@@ -1,0 +1,1151 @@
+---
+title: Array
+date: 2024-04-01 00:00:00
+tags: key-algorithm
+categories: algorithm
+---
+---
+
+# Examples
+
+## [704. Binary Search](https://leetcode.com/problems/binary-search/)
+
+#### Java
+
+```java
+class Solution {
+    public int search(int[] nums, int target) {
+        int pos = bsIteration(nums, target);
+        return pos < 0 ? -1 : pos;
+    }
+    private int bsRecursion(int[] nums, int tar, int l, int r) {
+        if (l > r) return -1 - l;
+        int m = l + (r - l) / 2;
+        if (nums[m] == tar) return m;
+        else if (nums[m] < tar) return bsRecursion(nums, tar, m + 1, r);
+        else return bsRecursion(nums, tar, l, m - 1);
+    }
+    private int bsIteration(int[] nums,int tar) {
+        int l = 0, r = nums.length - 1;
+        while (l <= r) {
+            int m = r - (r - l) / 2;
+            if (nums[m] == tar) return m;
+            else if (nums[m] > tar) r = m - 1;
+            else l = m + 1;
+        }
+        return -1 - l;
+    }
+}
+```
+
+#### Rust
+
+```rust
+use std::cmp::Ordering;
+
+impl Solution {
+    pub fn search(nums: Vec<i32>, target: i32) -> i32 {
+        let pos = Self::bs_recursion(&nums, target, 0, nums.len() as i32 - 1);
+        if pos < 0 {
+            -1
+        } else {
+            pos
+        }
+    }
+    
+    fn bs_iteration(nums: &Vec<i32>, tar: i32) -> i32 {
+        let (mut l, mut r) = (0_i32, nums.len() as i32 - 1);
+        while l <= r {
+            let m = (l + r) / 2;
+            match nums[m as usize].cmp(&tar) {
+                Ordering::Less => l = m + 1,
+                Ordering::Greater => r = m - 1,
+                Ordering::Equal => return m as i32,
+            };
+        }
+        -1 - l
+    }
+    fn bs_recursion(nums: &Vec<i32>, tar: i32, l: i32, r: i32) -> i32 {
+        if l > r {
+            return -1 - l;
+        }
+        let m = (l + r) / 2;
+        match nums[m as usize].cmp(&tar) {
+            Ordering::Equal => { m },
+            Ordering::Greater => { Self::bs_recursion(nums, tar, l, m - 1) },
+            Ordering::Less => { Self:: bs_recursion(nums, tar, m + 1, r) },
+        }
+    }
+}
+```
+
+## [27. Remove Element](https://leetcode.com/problems/remove-element/)
+
+#### Java
+
+```java
+class Solution {
+    public int removeElement(int[] nums, int val) {
+        int len = 0;  // 有效长度
+        for (int i = 0; i < nums.length; i ++) {
+            if ( nums[i] != val ) {
+                nums[len] = nums[i];
+                len ++;
+            }
+        }
+        return len;  // Arrays.copyOfRange(nums, 0, len);
+    }
+}
+```
+
+#### Rust
+
+```rust
+impl Solution {
+    pub fn remove_element(nums: &mut Vec<i32>, val: i32) -> i32 {
+        let mut len = 0;
+        for i in 0 .. nums.len() {
+            if nums[i] != val {
+                nums[len] = nums[i];
+                len += 1;
+            }
+        }
+        len as i32
+    }
+}
+```
+
+## [977. Squares of a Sorted Array](https://leetcode.com/problems/squares-of-a-sorted-array/)
+
+#### Java
+
+```java
+class Solution {
+    public int[] sortedSquares(int[] nums) {
+        int[] res = new int[nums.length];
+        if (nums[0] >= 0) for (int i = 0; i < nums.length; i++) res[i] = nums[i] * nums[i];
+        else {
+            int left = 0, right = nums.length - 1, ind = nums.length - 1;
+            while ( ind > -1 ) {
+                int squareLeft = nums[left] * nums[left];
+                int squareRight = nums[right] * nums[right];
+                if ( squareLeft > squareRight ) {
+                    res[ind] = squareLeft;
+                    left ++;
+                } else {
+                    res[ind] = squareRight;
+                    right --;
+                }
+                ind --;
+            }
+        }
+        return res;
+    }
+}
+```
+
+#### Rust
+
+```rust
+impl Solution {
+    pub fn sorted_squares(nums: Vec<i32>) -> Vec<i32> {
+        let mut ans: Vec<i32> = Vec::new();
+        let (mut l, mut r) = (0_i32, nums.len() as i32 - 1);
+        while l <= r {
+            let left_square = nums[l as usize] * nums[l as usize];
+            let right_square = nums[r as usize] * nums[r as usize];
+
+            if left_square < right_square {
+                ans.push(right_square);
+                r -= 1;
+            } else {
+                ans.push(left_square);
+                l += 1;
+            }
+        }
+        ans.reverse();
+        ans
+    }
+}
+```
+
+#### Python
+
+```python
+class Solution:
+    def sortedSquares(self, nums: List[int]) -> List[int]:
+        l = len(nums)
+        res = [0]*l
+        i, j = 0, l-1
+        for k in range(l - 1, -1, -1):
+            if nums[i]**2 <= nums[j]**2:
+                res[k] = nums[j]**2
+                j -= 1
+            elif nums[i]**2 > nums[j]**2:
+                res[k] = nums[i]**2
+                i += 1
+        return res
+```
+
+## [209. Minimum Size Subarray Sum](https://leetcode.com/problems/minimum-size-subarray-sum/)
+
+#### Java
+
+```java
+// Slide Window
+class Solution {
+    public int minSubArrayLen(int target, int[] nums) {
+        int l = 0, r = 0;
+        int sum = 0;
+        int ans = Integer.MAX_VALUE;
+        for (; r < nums.length; r ++) {
+            sum += nums[r];
+            while (l < nums.length && sum >= target) {
+                ans = Math.min(ans, r - l + 1);
+                sum -= nums[l];
+                l ++;
+            }
+        }
+        return ans == Integer.MAX_VALUE ? 0 : ans;
+    }
+}
+```
+
+```java
+// Prefix Sum
+class Solution {
+    public int minSubArrayLen(int target, int[] nums) {
+        int l = 0, r = 0;
+        int sum = 0;
+        int ans = Integer.MAX_VALUE;
+        int[] preSum = new int[nums.length];
+        preSum[0] = nums[0];
+        for (int i = 1; i < nums.length; i ++) preSum[i] = preSum[i - 1] + nums[i];
+        for (; r < nums.length; r ++) {
+            while (l < nums.length && preSum[r] - preSum[l] + nums[l] >= target) {
+                ans = Math.min(ans, r - l + 1);
+                l ++;
+            }
+        }
+        return ans == Integer.MAX_VALUE ? 0 : ans;
+    }
+}
+```
+
+#### Rust
+
+```rust
+// Prefix Sum
+impl Solution {
+    pub fn min_sub_array_len(target: i32, nums: Vec<i32>) -> i32 {
+        let mut accum: Vec<i32> = vec![0; nums.len() + 1];
+        for i in 1 .. accum.len() {
+            accum[i] = accum[i-1] + nums[i-1];
+        }
+        let mut l = 0;
+        let mut ans = usize::MAX;
+        for r in 1 .. accum.len() {
+            while accum[r] - accum[l] >= target {
+                ans = Ord::min(ans, r - l);
+                l += 1;
+            }
+        }
+        if ans == usize::MAX {0} else {ans as i32}
+    }
+}
+```
+
+## [59. Spiral Matrix II](https://leetcode.com/problems/spiral-matrix-ii/)
+
+#### Java
+
+```java
+class Solution {
+    public int[][] generateMatrix(int n) {
+        int[][] mat = new int[n][n];
+        int i = 0, j = 0;
+        int[] di = new int[] {0, 1, 0, -1}, dj = new int[] {1, 0, -1, 0};
+        int d = 0;        
+        for (int num = 1; num <= n * n; num ++) {
+            mat[i][j] = num;
+            int iNext = i + di[d], jNext = j + dj[d];
+            if ( iNext < 0 || iNext == n || jNext < 0 || jNext == n || mat[iNext][jNext] != 0) { // invalid situation
+                d = (d + 1) % 4;
+                iNext = i + di[d]; jNext = j + dj[d];
+            }
+            i = iNext; j = jNext;
+        }
+        return mat;
+    }
+}
+```
+
+#### Kotlin
+
+```kotlin
+class Solution {
+    fun generateMatrix(n: Int): Array<IntArray> {
+        val ans = Array<IntArray>(n) { IntArray(n) { 0 } }
+        var i = 0
+        var j = 0
+        var d = 0
+        val di = arrayOf(0, 1, 0, -1) 
+        val dj = arrayOf(1, 0, -1, 0)
+        for (`val` in 1 .. n*n) {
+            ans[i][j] = `val`
+            var ni = i + di[d]
+            var nj = j + dj[d]
+            if (ni == -1 || ni == n || nj == -1 || nj == n || ans[ni][nj] != 0) {
+                d = (d + 1) % 4
+                ni = i + di[d]
+                nj = j + dj[d]
+            }
+            i = ni
+            j = nj
+        }
+        return ans
+    }
+}
+```
+
+#### Rust
+
+```rust
+impl Solution {
+    pub fn generate_matrix(n: i32) -> Vec<Vec<i32>> {
+        let mut ans = vec![vec![0; n as usize]; n as usize];
+        let mut d: usize = 0;
+        let mut i: i32 = 0;
+        let mut j: i32 = 0;
+        let di: [i32; 4] = [0, 1, 0, -1];
+        let dj: [i32; 4] = [1, 0, -1, 0];
+        for val in 1..n * n + 1 {
+            ans[i as usize][j as usize] = val;
+            let mut ni: i32 = i + di[d];
+            let mut nj: i32 = j + dj[d];
+            if ni == -1 || ni == n || nj == -1 || nj == n || ans[ni as usize][nj as usize] != 0 {
+                d = (d + 1) % 4;
+                ni = i + di[d];
+                nj = j + dj[d];
+            }
+            i = ni;
+            j = nj;
+        }
+        ans
+    }
+}
+```
+
+#### Python
+
+```python
+class Solution:
+    def generateMatrix(self, n: int) -> List[List[int]]:
+        res = [[0]*n for _ in range(n)]
+        nums = [i+1 for i in range(n**2)]
+        di, dj = [0, 1, 0, -1], [1, 0, -1, 0]
+        d = 0
+        i,j = 0, 0
+        for val in nums:
+            res[i][j] = val
+            i_next, j_next = i + di[d], j + dj[d]
+
+            if i_next == n or i_next < 0 or j_next == n or j_next < 0 or res[i_next][j_next] != 0:
+                d = (d + 1)%4
+                i_next, j_next = i + di[d], j + dj[d]
+
+            i, j = i_next, j_next
+        
+        return res
+```
+
+## [303. Range Sum Query - Immutable](https://leetcode.com/problems/range-sum-query-immutable/)
+
+#### Java
+
+*Prefix Sum*
+
+```java
+class NumArray {
+    private int[] preSum;
+
+    public NumArray(int[] nums) {
+        preSum = new int[nums.length + 1];
+        for (int i = 1; i < preSum.length; i ++) {
+            preSum[i] = preSum[i - 1] + nums[i - 1];
+        }
+    }
+    
+    public int sumRange(int left, int right) {
+        if (left > right) return 0;
+        return preSum[right + 1] - preSum[left];
+    }
+}
+```
+
+
+
+### [58. 区间和（第九期模拟笔试）](https://kamacoder.com/problempage.php?pid=1070)
+
+#### Java
+
+```java
+import java.util.*;
+
+class Solution {
+    private int[] prefixSum;
+    
+    public Solution (int[] arr) {
+        prefixSum = new int[arr.length + 1];
+        for (int i = 0; i < arr.length; i ++) {
+            prefixSum[i + 1] = prefixSum[i] + arr[i];
+        }
+    }
+    
+    public int check(int idx1, int idx2) {
+        return prefixSum[idx2 + 1] - prefixSum[idx1];
+    }
+}
+
+class Main {
+    public static void main (String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        int[] arr = new int[n + 1];
+        for (int i = 0; i < n; i ++) arr[i] = sc.nextInt();
+        
+        Solution s = new Solution(arr);
+        while (sc.hasNextInt()) {
+            int idx1 = sc.nextInt();
+            int idx2 = sc.nextInt();
+            System.out.println(s.check(idx1, idx2));
+        }
+        scanner.close();
+    }
+}
+```
+
+### [44. 开发商购买土地（第五期模拟笔试）](https://kamacoder.com/problempage.php?pid=1044)
+
+#### C++
+
+```c++
+#include <iostream>
+#include <vector>
+#include <climits>  // 添加 <climits> 头文件, INT_MAX
+
+using namespace std;
+
+class Solution {
+public:
+    int minDiff(vector<vector<int>>& matrix) {
+        vector<int> rowPrefixSum(matrix.size() + 1, 0);
+        for (size_t i = 0; i < matrix.size(); i++) {
+            int rowSum = 0;
+            for (size_t j = 0; j < matrix[0].size(); j++) {
+                rowSum += matrix[i][j];
+            }
+            rowPrefixSum[i + 1] = rowPrefixSum[i] + rowSum;
+        }
+
+        vector<int> colPrefixSum(matrix[0].size() + 1, 0);
+        for (size_t j = 0; j < matrix[0].size(); j++) {
+            int colSum = 0;
+            for (size_t i = 0; i < matrix.size(); i++) {
+                colSum += matrix[i][j];
+            }
+            colPrefixSum[j + 1] = colPrefixSum[j] + colSum;
+        }
+
+        int ans = INT_MAX;
+        for (size_t i = 0; i < matrix.size() + 1; i++) {
+            ans = min(abs(rowPrefixSum[matrix.size()] - 2 * rowPrefixSum[i]), ans);
+            if (ans == 0) return 0;
+        }
+        for (size_t j = 0; j < matrix[0].size() + 1; j++) {
+            ans = min(abs(colPrefixSum[matrix[0].size()] - 2 * colPrefixSum[j]), ans);
+            if (ans == 0) return 0;
+        }
+        return ans;
+    }
+};
+
+int main() {
+    int nr, nc;
+    cin >> nr >> nc;
+    vector<vector<int>> matrix(nr, vector<int>(nc, 0));
+    for (size_t i = 0; i < nr; i++) {
+        for (size_t j = 0; j < nc; j++) {
+            cin >> matrix[i][j];
+        }
+    }
+    Solution s;
+    cout << s.minDiff(matrix) << endl;
+}
+```
+
+
+
+## [304. Range Sum Query 2D - Immutable](https://leetcode.com/problems/range-sum-query-2d-immutable/)
+
+*2D - Prefix Sum*
+
+#### Java
+
+```java
+class NumMatrix {
+    private int[][] prefixSum;
+
+    public NumMatrix(int[][] matrix) {
+        prefixSum = new int[matrix.length + 1][matrix[0].length + 1];
+        for (int i = 0; i < matrix.length; i ++) {
+            for (int j = 0; j < matrix[0].length; j ++) {
+                prefixSum[i + 1][j + 1] = prefixSum[i + 1][j] + prefixSum[i][j + 1] + matrix[i][j] - prefixSum[i][j];
+            }
+        }
+    }
+    
+    public int sumRegion(int row1, int col1, int row2, int col2) {
+        return prefixSum[row2 + 1][col2 + 1] - prefixSum[row2 + 1][col1] - prefixSum[row1][col2 + 1] + prefixSum[row1][col1];
+    }
+}
+```
+
+#### C++
+
+```c++
+class NumMatrix {
+    vector<vector<int>> prefixSum;
+public:
+    NumMatrix(vector<vector<int>>& matrix) {
+        prefixSum = vector<vector<int>>(matrix.size() + 1, vector<int>(matrix[0].size() + 1, 0));
+        for (int i = 0; i < matrix.size(); i ++) {
+            for (int j = 0; j < matrix[0].size(); j ++) {
+                prefixSum[i + 1][j + 1] = prefixSum[i + 1][j] + prefixSum[i][j + 1] + matrix[i][j] - prefixSum[i][j];
+            }
+        }
+    }
+    
+    int sumRegion(int row1, int col1, int row2, int col2) {
+        return prefixSum[row2 + 1][col2 + 1] - prefixSum[row2 + 1][col1] - prefixSum[row1][col2 + 1] + prefixSum[row1][col1];
+    }
+};
+```
+
+
+
+# Extra
+
+## [35. Search Insert Position](https://leetcode.com/problems/search-insert-position/)
+
+#### Java
+
+```java
+class Solution {
+    public int searchInsert(int[] nums, int target) {
+        int pos = bsRecursion(nums, target, 0, nums.length - 1);
+        if (pos < 0) return -1 - pos;
+        return pos;
+    }
+    private int bsRecursion(int[] nums, int tar, int l, int r) {
+        if (l > r) return -1 - l;
+        int m = l + (r - l) / 2;
+        if (nums[m] == tar) return m;
+        else if (nums[m] < tar) return bsRecursion(nums, tar, m + 1, r);
+        else return bsRecursion(nums, tar, l, m - 1);
+    }
+    private int bsIteration(int[] nums,int tar) {
+        int l = 0, r = nums.length - 1;
+        while (l <= r) {
+            int m = r - (r - l) / 2;
+            if (nums[m] == tar) return m;
+            else if (nums[m] > tar) r = m - 1;
+            else l = m + 1;
+        }
+        return -1 - l;
+    }
+}
+```
+
+#### Rust
+
+```rust
+impl Solution {
+    pub fn search_insert(nums: Vec<i32>, target: i32) -> i32 {
+        let pos = Self::bs_iteration(&nums, target);
+        if pos < 0 {
+            return -1 - pos;
+        }
+        pos
+    }
+
+    fn bs_iteration(nums: &Vec<i32>, tar: i32) -> i32 {
+        let (mut l, mut r) = (0_i32, nums.len() as i32 - 1);
+        while l <= r {
+            let m = (l + r) / 2;
+            match nums[m as usize].cmp(&tar) {
+                Ordering::Less => l = m + 1,
+                Ordering::Greater => r = m - 1,
+                Ordering::Equal => return m as i32,
+            };
+        }
+        -1 - l
+    }
+    fn bs_recursion(nums: &Vec<i32>, tar: i32, l: i32, r: i32) -> i32 {
+        if l > r {
+            return -1 - l;
+        }
+        let m = (l + r) / 2;
+        match nums[m as usize].cmp(&tar) {
+            Ordering::Equal => { m },
+            Ordering::Greater => { Self::bs_recursion(nums, tar, l, m - 1) },
+            Ordering::Less => { Self:: bs_recursion(nums, tar, m + 1, r) },
+        }
+    }
+}
+```
+
+## [34. Find First and Last Position of Element in Sorted Array](https://leetcode.com/problems/find-first-and-last-position-of-element-in-sorted-array/)
+
+本题不能先找中点, 再向两边扩展, 这样最坏情况是 O(n) 复杂度
+
+#### Java
+
+```java
+class Solution {
+    public int[] searchRange(int[] nums, int target) {
+        int[] ans = new int[] {-1, -1};
+        if (nums.length == 0) return ans;
+        int l = bsLeft(nums, target);
+        if (l < 0) return ans;
+        int r = bsRight(nums, target);
+        if (r < 0) return ans;
+        ans[0] = l;
+        ans[1] = r;
+        return ans;
+    }
+    private int bsLeft(int[] nums, int tar) {
+        int l = 0, r = nums.length - 1;
+        while (l <= r) {
+            int m = (r - l) / 2 + l;
+            if (nums[m] < tar) l = m + 1;
+            else r = m - 1;
+        }
+        if (l >= nums.length || nums[l] != tar) return -1 - l;
+        return l;
+    }
+    private int bsRight(int[] nums, int tar) {
+        int l = 0, r = nums.length - 1;
+        while (l <= r) {
+            int m = r - (r - l) / 2;
+            if (nums[m] <= tar) l = m + 1;
+            else r = m - 1;
+        }
+        if (r < 0 || nums[r] != tar) return -1 - r;
+        return r;
+    }
+}
+```
+
+## [69. Sqrt(x)](https://leetcode.com/problems/sqrtx/)
+
+#### Java
+
+```java
+class Solution {
+    public int mySqrt(int x) {
+        if (x <= 1) return x;
+        int lower = 1, upper = x;
+        while (lower <= upper) {
+            int middle = lower + (upper - lower) / 2; // 防止越界
+            long square = (long) middle * (long) middle;
+            if (square == x) return middle;
+            else if (square < x) lower = middle + 1;
+            else upper = middle - 1;
+        }
+        return upper;
+    }
+}
+```
+
+#### Kotlin
+
+```kotlin
+class Solution {
+    fun mySqrt(x: Int): Int {
+        if (x == 0) return 0
+        var l: Long = 1
+        var r: Long = x.toLong()
+        while (l <= r) {
+            val m = (l+r) / 2
+            when {
+                m*m == x.toLong() -> return m.toInt()
+                m*m < x.toLong() -> l = m+1
+                m*m > x.toLong() -> r = m-1
+            }
+        }
+        return r.toInt()
+    }
+}
+```
+
+## [367. Valid Perfect Square](https://leetcode.com/problems/valid-perfect-square/)
+
+#### Java
+
+```java
+class Solution {
+    public boolean isPerfectSquare(int num) {
+        if (num <= 1) return true;
+        int lower = 1, upper = num;
+        while (lower <= upper) {
+            int middle = upper - (upper - lower) / 2; // 防止越界
+            long square = (long) middle * (long) middle;
+            if (square == num) return true;
+            else if (square < num) lower = middle + 1;
+            else upper = middle - 1;
+        }
+        return false;
+    }
+}
+```
+
+## [26. Remove Duplicates from Sorted Array](https://leetcode.com/problems/remove-duplicates-from-sorted-array/)
+
+#### Java
+
+```java
+class Solution {
+    public int removeDuplicates(int[] nums) {
+        int validInd = 0;
+        for (int i = 0; i < nums.length; i ++) {
+            if ( nums[i] != nums[validInd] ) {  // 合法情况, 更新 validInd
+                validInd ++;
+                nums[validInd] = nums[i];
+            }
+        }
+        return validInd + 1;  // Arrays.copyOfRange(nums, 0, validInd + 1);
+    }
+}
+```
+
+#### Rust
+
+```rust
+impl Solution {
+    pub fn remove_duplicates(nums: &mut Vec<i32>) -> i32 {
+        let mut len: i32 = 1;
+        for i in 1..nums.len() {
+            if nums[i - 1] != nums[i] {
+                nums[len as usize] = nums[i];
+                len += 1;
+            }
+        }
+        len
+    }
+}
+```
+
+## [283. Move Zeroes](https://leetcode.com/problems/move-zeroes/)
+
+#### Java
+
+```java
+class Solution {
+    public void moveZeroes(int[] nums) {
+        int ind = 0;
+        for (int i = 0; i < nums.length; i ++) {
+            if ( nums[i] != 0 ) {
+                nums[ind] = nums[i];
+                ind ++;
+            }
+        }
+        for (int i = ind; i < nums.length; i ++) nums[i] = 0;
+    }
+}
+```
+
+#### Rust
+
+```rust
+impl Solution {
+    pub fn move_zeroes(nums: &mut Vec<i32>) {
+        let mut len: usize = 0;
+        for i in 0..nums.len() {
+            if nums[i] != 0 {
+                nums[len] = nums[i];
+                len += 1;
+            }
+        }
+        for i in len..nums.len() {
+            nums[i] = 0;
+        }
+    }
+}
+```
+
+## [844. Backspace String Compare](https://leetcode.com/problems/backspace-string-compare/)
+
+#### Java
+
+*Double Pointers*
+
+```java
+class Solution {
+    private int getValidLen(StringBuilder s) {
+        int len = 0;
+        for (int i = 0; i < s.length(); i ++) {
+            char ch = s.charAt(i);
+            if (ch == '#') {
+                len  = Math.max(0, len - 1);
+            } else {
+                s.setCharAt(len, ch);
+                len ++;
+            }
+        }
+        return len;
+    }
+    public boolean backspaceCompare(String s, String t) {
+        StringBuilder sB = new StringBuilder(s);
+        StringBuilder tB = new StringBuilder(t);
+        int sLen = getValidLen(sB);
+        int tLen = getValidLen(tB);
+        if (sLen != tLen) return false;
+        return sB.substring(0, sLen).equals( tB.substring(0, tLen) );
+    }
+}
+```
+
+注意 StringBuilder 的 .substring() 用法
+
+## [904. Fruit Into Baskets](https://leetcode.com/problems/fruit-into-baskets/)
+
+#### Java
+
+"record the last index of each type of fruits"
+
+```java
+class Solution {
+    public int totalFruit(int[] fruits) {
+        Map<Integer, Integer> basket = new HashMap<>();
+        int l = 0, r = 0;
+        int ans = 0;
+        for (; r < fruits.length; r ++) {
+            basket.put(fruits[r], r);
+            if (basket.size() > 2) {
+                int removeId = basket.values().stream().min(Integer::compareTo).orElse(Integer.MAX_VALUE);
+                // find the fruit that appear most early
+                basket.remove(fruits[removeId]);
+                l = removeId + 1;
+            }
+            ans = Math.max(ans, r - l + 1);
+        }
+        return ans;
+    }
+}
+```
+
+"record the cnt of each type of fruits"
+
+```java
+class Solution {
+    public int totalFruit(int[] fruits) {
+        Map<Integer, Integer> basket = new HashMap<>();
+        int l = 0, r = 0;
+        int ans = 0;
+        for ( ; r < fruits.length; r ++) {
+            int fruit = fruits[r];
+            basket.put(fruit, basket.getOrDefault(fruit, 0) + 1);
+            while (basket.size() > 2) {
+                int removeFruit = fruits[l];
+                basket.put(removeFruit, basket.get(removeFruit) - 1);
+                if (basket.get(removeFruit) == 0) basket.remove(removeFruit);
+                l ++;
+            }
+            ans = Math.max(r - l + 1, ans);
+        }
+        return ans;
+    }
+}
+```
+
+## [76. Minimum Window Substring](https://leetcode.com/problems/minimum-window-substring/)
+
+#### Java
+
+*Hash + Slide Window*
+
+```java
+class Solution {
+    private HashMap<Character, Integer> tMap = new HashMap<>();
+    private HashMap<Character, Integer> sMap = new HashMap<>();
+
+    private boolean isOk() {
+        for (Character ch : this.tMap.keySet()) {
+            if ( !(sMap.containsKey(ch) && sMap.get(ch) >= tMap.get(ch)) ) return false;
+        }
+        return true;
+    }
+
+    public String minWindow(String s, String t) {
+        for (char ch : t.toCharArray()) {
+            tMap.put( ch , tMap.getOrDefault(ch, 0) + 1 );
+        }
+
+        int left = 0, right = 0, start = 0, end = Integer.MAX_VALUE, minLen = Integer.MAX_VALUE;
+        for (right = 0; right < s.length(); right ++) {
+            sMap.put( s.charAt(right), sMap.getOrDefault(s.charAt(right), 0) + 1 );
+            while ( this.isOk() ) {
+                if ( right - left + 1 < minLen ) {
+                    minLen = right - left + 1;
+                    start = left;
+                    end = right;
+                }
+                this.sMap.put( s.charAt(left), this.sMap.get( s.charAt(left) ) - 1 );
+                left ++;
+            }
+        }
+        if (minLen == Integer.MAX_VALUE) return "";
+        return s.substring(start, end + 1);
+    }
+}
+```
+
+## [54. Spiral Matrix](https://leetcode.com/problems/spiral-matrix/)
+
+#### Java
+
+```java
+class Solution {
+    public List<Integer> spiralOrder(int[][] matrix) {
+        int m = matrix.length, n = matrix[0].length;
+        List<Integer> res = new ArrayList<>();
+        int[] di = new int[] {0, 1, 0, -1}, dj = new int[] {1, 0, -1, 0};
+        int d = 0;
+        int i = 0, j = 0;
+        for (int k = 0; k < m * n; k ++) {
+            res.add(matrix[i][j]);
+            matrix[i][j] = 8964;  // label the elements that have been recorded
+            int ni = i + di[d], nj = j + dj[d];
+            if ( ni < 0 || ni == m || nj < 0 || nj == n || matrix[ni][nj] == 8964 ) {
+                d = (d + 1) % 4;
+                ni = i + di[d]; nj = j + dj[d];
+            }
+            i = ni; j = nj;
+        }
+        return res;
+    };
+}
+```
+
+#### Kotlin
+
+```kotlin
+class Solution {
+    fun spiralOrder(matrix: Array<IntArray>): List<Int> {
+        val m = matrix.size; val n = matrix[0].size;
+        val ans = mutableListOf<Int>()
+        var i = 0; var j = 0
+        val di = intArrayOf(0, 1, 0, -1); val dj = intArrayOf(1, 0, -1, 0)
+        var d = 0
+        repeat(m * n) {
+            ans.add(matrix[i][j])
+            matrix[i][j] = 8964
+            var ni = i + di[d]; var nj = j + dj[d]
+            if (ni == -1 || ni == m || nj == -1 || nj == n || matrix[ni][nj] == 8964) {
+                d = (d + 1) % 4
+                ni = i + di[d]; nj = j + dj[d]
+            }
+            i = ni; j = nj
+        }
+        return ans
+    }
+}
+```
+
+## [LCR 146. 螺旋遍历二维数组](https://leetcode.cn/problems/shun-shi-zhen-da-yin-ju-zhen-lcof/)
+
+```java
+class Solution {
+    public int[] spiralArray(int[][] array) {
+        if (array.length == 0) return new int[0];
+        int m = array.length, n = array[0].length;
+        int[] res = new int[m * n];
+        int i = 0, j = 0;
+        int[] di = {0, 1, 0, -1}, dj = {1, 0, -1, 0};
+        int d = 0;
+        for (int k = 0; k < m * n; k ++) {
+            res[k] = array[i][j];
+            array[i][j] = Integer.MIN_VALUE;  // label
+            int ni = i + di[d], nj = j + dj[d];
+            if (ni == -1 || ni == m || nj == -1 || nj == n || array[ni][nj] == Integer.MIN_VALUE) {
+                d = (d + 1) % 4;
+                ni = i + di[d]; nj = j + dj[d];
+            }
+            i = ni; j = nj;
+        }
+        return res;
+    }
+}
+```
+
+## [1365. How Many Numbers Are Smaller Than the Current Number](https://leetcode.com/problems/how-many-numbers-are-smaller-than-the-current-number/)
+
+#### Java
+
+```java
+class Solution {
+    public int[] smallerNumbersThanCurrent(int[] nums) {
+        int[] sorted = Arrays.copyOf(nums, nums.length);
+        Arrays.sort(sorted);
+        Map<Integer, Integer> map = new HashMap<>();
+        for (int i = 0; i < sorted.length; i ++) if (!map.containsKey(sorted[i])) map.put(sorted[i], i);
+        return Arrays.stream(nums).map(x -> map.get(x)).toArray();
+    }
+}
+```
+
+## [941. Valid Mountain Array](https://leetcode.com/problems/valid-mountain-array/)
+
+```java
+class Solution {
+    public boolean validMountainArray(int[] arr) {
+        int len = arr.length;
+        int i = 0, j = len - 1;
+        while (i + 1 < len && arr[i] < arr[i + 1]) i ++;
+        while (j - 1 > -1 && arr[j] < arr[j - 1]) j --;
+        
+        if (i != j) return false;
+        else {
+            if (i == 0 || j == len - 1) return false;  // 单调的
+            return true;
+        }
+    }
+}
+```
+
+## [1207. Unique Number of Occurrences](https://leetcode.com/problems/unique-number-of-occurrences/)
+
+#### Java
+
+```java
+class Solution {
+    public boolean uniqueOccurrences(int[] arr) {
+        Map<Integer, Integer> map = new HashMap<>();
+        for (int num : arr) map.put(num, map.getOrDefault(num, 0) + 1);
+        Set<Integer> set = new HashSet<>();
+        for (int val : map.values()) {
+            if (set.contains(val)) return false;
+            set.add(val);
+        }
+        return true;
+    }
+}
+```
+
+## [189. Rotate Array](https://leetcode.com/problems/rotate-array/)
+
+#### Java
+
+```java
+class Solution {
+    public void rotate(int[] nums, int k) {
+        k %= nums.length;
+        int[] res = IntStream  // 注意这里是 IntStream
+                    .concat(
+            			Arrays.stream(nums).skip(nums.length - k), 
+            			Arrays.stream(nums).limit(nums.length - k)
+        			)
+                    .toArray();
+        for (int i = 0; i < nums.length; i ++) nums[i] = res[i];
+    }
+}
+```
+
+```java
+class Solution {
+    public void rotate(int[] nums, int k) {
+        int n = nums.length;
+        if (n == 0) return;
+        k %= n;
+        int cnt = gcd(k, n);
+        for (int start = 0; start < cnt; start ++) {
+            int cur = start;
+            int pre = nums[start];
+            do {
+                int nxt = (cur + k) % n;
+                int tmp = nums[nxt];
+                nums[nxt] = pre;
+                pre = tmp;
+
+                cur = nxt;
+            } while (start != cur);
+        }
+    }
+
+    private int gcd(int x, int y) {
+        return y > 0 ? gcd(y, x % y) : x;
+    }
+}
+```
+
+## [724. Find Pivot Index](https://leetcode.com/problems/find-pivot-index/)
+
+*Prefix Sum*
+
+```java
+class Solution {
+    public int pivotIndex(int[] nums) {
+        int sum = 0;
+        for (int num : nums) sum += num;
+        int leftSum = 0;
+        for (int i = 0; i < nums.length; i ++) {
+            int rightSum = sum - nums[i] - leftSum;
+            if (leftSum == rightSum) return i;
+            leftSum += nums[i];
+        }
+        return -1;
+    }
+}
+```
+
+```java
+class Solution {
+    public int pivotIndex(int[] nums) {
+        int l = nums.length;
+        int[] accum = new int[l];
+        accum[0] = nums[0];
+        for (int i = 1; i < l; i ++) accum[i] = accum[i - 1] + nums[i];
+        for (int i = 0; i < l; i ++) {
+            int sumL = accum[i] - nums[i];
+            int sumR = accum[l - 1] - accum[i];
+            if (sumL == sumR) return i;
+        }
+        return -1;
+    }
+}
+```
+
+## [922. Sort Array By Parity II](https://leetcode.com/problems/sort-array-by-parity-ii/)
+
+```java
+class Solution {
+    public int[] sortArrayByParityII(int[] nums) {
+        int[] ans = new int[nums.length];
+        int evenIdx = 0, oddIdx = 1;
+        for (int num : nums) {
+            if ((num & 1) == 0) {
+                ans[evenIdx] = num;
+                evenIdx += 2;
+            } else {
+                ans[oddIdx] = num;
+                oddIdx += 2;
+            }
+        }
+        return ans;
+    }
+}
+```
+
+
+

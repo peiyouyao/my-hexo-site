@@ -1,0 +1,40 @@
+# === Hexo blog ignore rules ===
+
+# Hexo generated files
+public/
+.deploy_git/
+db.json
+
+# Dependency
+node_modules/
+
+# Editor / IDE files
+.idea/
+.vscode/
+
+# OS / System files
+.DS_Store
+Thumbs.db
+
+# npm logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Lock files (optional, uncomment to ignore them)
+# yarn.lock
+# package-lock.json
+
+# Themes (optional: if submodule or downloaded separately)
+# themes/next/.git
+
+# Hexo scaffolds/templates (可选忽略用户自定义内容)
+# scaffolds/
+
+# Backup or temp
+*.bak
+*.tmp
+
+_multiconfig.yml
