@@ -9,7 +9,7 @@ categories: tech
 
 > In this blog, I will give an elaborate instruction to the process of how to construct a whole RPC framework with Java. 
 >
-> It is also a record of project [demo-pyrpc](https://github.com/PerryYao-GitHub/demo-pyrpc) and [demo-rpc](https://github.com/PerryYao-GitHub/demo-rpc), the former one is an update on the last one.
+> It is also a record of project [demo-pyrpc](https://github.com/peiyouyao/demo-pyrpc) and [demo-rpc](https://github.com/peiyouyao/demo-rpc), the former one is an update on the last one.
 
 # pyRPC Framework
 

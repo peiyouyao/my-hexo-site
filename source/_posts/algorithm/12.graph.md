@@ -1,0 +1,1952 @@
+---
+title: Graph Theory
+date: 2024-08-05 00:00:00
+tags: key-algorithm
+categories: algorithm
+---
+
+---
+
+# Examples
+
+## [98. 所有可达路径](https://kamacoder.com/problempage.php?pid=1170)
+
+#### C++
+
+```c++
+#include<iostream>
+#include<vector>
+using namespace std;
+
+class Solution {
+    void dfs(
+        vector<vector<int>>& ans, 
+        vector<int>& path, 
+        vector<bool>& state, 
+        vector<vector<int>>& graph,
+        int cur
+    ) {
+        if (state[cur]) return;
+        state[cur] = true;
+        path.push_back(cur);
+        if (cur == graph.size() - 1) ans.push_back(path);
+        else for (int nxt : graph[cur]) dfs(ans, path, state, graph, nxt);
+        path.pop_back();
+        state[cur] = false;
+    }
+public:
+    vector<vector<int>> allPathsSourceTarget(vector<vector<int>>& graph) {
+        vector<bool> state(graph.size(), false);
+        vector<vector<int>> ans;
+        vector<int> path;
+        dfs(ans, path, state, graph, 0);
+        return ans;
+    }
+};
+
+int main() {
+    Solution s;
+    int n, m, i, j;
+    cin >> n >> m;
+    vector<vector<int>> graph(m, vector<int>{});
+    while (m --) {
+        cin >> i >> j;
+        graph[i - 1].push_back(j - 1);
+    }
+    vector<vector<int>> ans = s.allPathsSourceTarget(graph);
+    if (ans.empty()) cout << -1 << endl;
+    for (vector<int>& path : ans) {
+        for (int node : path) cout << node + 1 << " ";
+        cout << endl;
+    }
+}
+```
+
+
+
+### [797. All Paths From Source to Target](https://leetcode.com/problems/all-paths-from-source-to-target/)
+
+#### Java
+
+*DFS*
+
+```java
+class Solution {
+    public List<List<Integer>> allPathsSourceTarget(int[][] graph) {
+        List<List<Integer>> ans = new ArrayList<>();
+        List<Integer> path = new ArrayList<>();
+        path.addLast(0); // 从 0 出发
+        dfs(ans, path, graph, 0);
+        return ans;
+    }
+    private void dfs(List<List<Integer>> ans, List<Integer> path, int[][] graph, int cur) {
+        if (cur == graph.length - 1) {
+            ans.add(new ArrayList<>(path));
+            return;
+        }
+        for (int nxt : graph[cur]) {
+            path.addLast(nxt);
+            dfs(ans, path, graph, nxt);
+            path.removeLast();
+        }
+    }
+}
+```
+
+```java
+class Solution {
+    public List<List<Integer>> allPathsSourceTarget(int[][] graph) {
+        List<List<Integer>> ans = new ArrayList<>();
+        dfs(ans, new ArrayList<>(), graph, 0);
+        return ans;
+    }
+    private void dfs(List<List<Integer>> ans, List<Integer> path, int[][] graph, int cur) {
+        path.addLast(cur);
+        if (cur == graph.length - 1) ans.addLast(new ArrayList<>(path));
+        else for (int nxt : graph[cur]) dfs(ans, path, graph, nxt);
+        path.removeLast();
+    }
+}
+```
+
+
+
+
+
+## [200. Number of Islands](https://leetcode.com/problems/number-of-islands/) / [99. 岛屿数量](https://kamacoder.com/problempage.php?pid=1171)
+
+#### Java
+
+*DFS*: 在一个结点上, 去走到它可以到达的最远的边界
+
+```java
+class Solution {
+    private boolean[][] visited;
+    private char[][] g;
+    private int nr;
+    private int nc;
+
+    private void visitIsland(int i, int j) {
+        if (i == -1 || i == nr || j == -1 || j == nc || visited[i][j] || g[i][j] == '0') return;
+        visited[i][j] = true;
+        visitIsland(i+1, j);
+        visitIsland(i-1, j);
+        visitIsland(i, j+1);
+        visitIsland(i, j-1);
+    }
+
+    public int numIslands(char[][] grid) {
+        g = grid;
+        nr = g.length;
+        nc = g[0].length;
+        visited = new boolean[nr][nc];
+
+        int cnt = 0;
+        for (int i = 0; i < nr; i ++) {
+            for (int j = 0; j < nc; j ++) {
+                if (visited[i][j] || g[i][j] == '0') continue;
+                cnt ++;
+                visitIsland(i, j);
+            }
+        }
+        return cnt;
+    }
+}
+```
+
+
+
+#### C++
+
+*DFS*
+
+```c++
+class Solution {
+    void visit(vector<vector<char>>& board, int i, int j) {
+        if (
+            i == -1 || 
+            i == board.size() || 
+            j == -1 || 
+            j == board[0].size() ||
+            board[i][j] != '1'
+        ) return;
+        board[i][j] = '0';
+        visit(board, i - 1, j);
+        visit(board, i + 1, j);
+        visit(board, i, j - 1);
+        visit(board, i, j + 1);
+    }
+    public:
+    int numIslands(vector<vector<char>>& board) {
+        int cnt = 0;
+        for (int i = 0; i < board.size(); i ++) {
+            for (int j = 0; j < board[0].size(); j ++) {
+                if (board[i][j] == '1') {
+                    cnt ++;
+                    visit(board, i, j);
+                }
+            }
+        }
+        return cnt;
+    } 
+};
+```
+
+*DFS*
+
+以下 "加入队列的同时, 立马更新状态" 的写法不会超时
+
+```c++
+class Solution {
+    int di[4] = {0, 1, 0, -1};
+    int dj[4] = {1, 0, -1, 0};
+    void visit(vector<vector<char>>& board, int i, int j) {
+        queue<pair<int, int>> q;
+        q.push({i, j});
+        board[i][j] = '0'; // 加入队列的同时, 立马更新状态
+        while (!q.empty()) {
+            pair<int, int> cur = q.front(); q.pop();
+            int ci = cur.first, cj = cur.second;
+            
+            for (int d = 0; d < 4; d ++) {
+                int ni = ci + di[d], nj = cj + dj[d];
+                if (ni == -1 ||
+                    ni == board.size() ||
+                    nj == -1 ||
+                    nj == board[0].size() ||
+                    board[ni][nj] != '1'
+                ) continue;
+                q.push({ni, nj});
+                board[ni][nj] = '0'; // 加入队列的同时, 立马更新状态
+            }
+        }
+    }
+public:
+    int numIslands(vector<vector<char>>& board) {
+        int cnt = 0;
+        for (int i = 0; i < board.size(); i ++) {
+            for (int j = 0; j < board[0].size(); j ++) {
+                if (board[i][j] == '1') {
+                    cnt ++;
+                    visit(board, i, j);
+                }
+            }
+        }
+        return cnt;
+    } 
+};
+```
+
+
+
+以下写法超时
+
+```c++
+class Solution {
+    int di[4] = {0, 1, 0, -1};
+    int dj[4] = {1, 0, -1, 0};
+    void visit(vector<vector<char>>& board, int i, int j) {
+        queue<pair<int, int>> q;
+        q.push({i, j});
+        while (!q.empty()) {
+            pair<int, int> cur = q.front(); q.pop();
+            int ci = cur.first, cj = cur.second;
+            board[ci][cj] = '0'; // 每次从队列取出来后再更新状态
+            for (int d = 0; d < 4; d ++) {
+                int ni = ci + di[d], nj = cj + dj[d];
+                if (ni == -1 ||
+                    ni == board.size() ||
+                    nj == -1 ||
+                    nj == board[0].size() ||
+                    board[ni][nj] != '1'
+                ) continue;
+                q.push({ni, nj});
+            }
+        }
+    }
+public:
+    int numIslands(vector<vector<char>>& board) {
+        int cnt = 0;
+        for (int i = 0; i < board.size(); i ++) {
+            for (int j = 0; j < board[0].size(); j ++) {
+                if (board[i][j] == '1') {
+                    cnt ++;
+                    visit(board, i, j);
+                }
+            }
+        }
+        return cnt;
+    } 
+};
+```
+
+**举例说明**
+
+假设有一个 2x2 的网格：
+
+```
+1 1
+1 1
+```
+
+**第一种写法**
+
+- 将 `(0, 0)` 加入队列，并标记为 `'0'`。
+- 从队列中取出 `(0, 0)`，访问其邻居 `(0, 1)` 和 `(1, 0)`，将它们加入队列并标记为 `'0'`。
+- 从队列中取出 `(0, 1)`，访问其邻居 `(0, 0)`（已标记为 `'0'`，跳过）和 `(1, 1)`，将 `(1, 1)` 加入队列并标记为 `'0'`。
+- 从队列中取出 `(1, 0)`，访问其邻居 `(0, 0)`（已标记为 `'0'`，跳过）和 `(1, 1)`（已标记为 `'0'`，跳过）。
+- 从队列中取出 `(1, 1)`，访问其邻居 `(0, 1)` 和 `(1, 0)`（均已标记为 `'0'`，跳过）。
+- 队列为空，结束。
+
+整个过程没有重复访问，队列大小始终控制在岛屿的实际大小范围内**。**
+
+**第二种写法**
+
+- 将 `(0, 0)` 加入队列。
+- 从队列中取出 `(0, 0)`，标记为 `'0'`，访问其邻居 `(0, 1)` 和 `(1, 0)`，将它们加入队列。
+- 从队列中取出 `(0, 1)`，标记为 `'0'`，访问其邻居 `(0, 0)`（已标记为 `'0'`，跳过）和 `(1, 1)`，将 `(1, 1)` 加入队列。
+- 从队列中取出 `(1, 0)`，标记为 `'0'`，访问其邻居 `(0, 0)`（已标记为 `'0'`，跳过）和 `(1, 1)`（未标记，加入队列）。
+- 从队列中取出 `(1, 1)`，标记为 `'0'`，访问其邻居 `(0, 1)` 和 `(1, 0)`（均已标记为 `'0'`，跳过）。
+- 从队列中取出 `(1, 1)`（重复节点），标记为 `'0'`，访问其邻居 `(0, 1)` 和 `(1, 0)`（均已标记为 `'0'`，跳过）。
+- 队列为空，结束。
+
+可以看到，`(1, 1)` 被重复加入队列，导致队列膨胀和重复访问。
+
+
+
+## [695. Max Area of Island](https://leetcode.com/problems/max-area-of-island/) / [100. 岛屿的最大面积](https://kamacoder.com/problempage.php?pid=1172)
+
+#### C++
+
+```c++
+class Solution {
+    int di[4] = {0, 1, 0, -1};
+    int dj[4] = {1, 0, -1, 0};
+    void visit(vector<vector<int>>& grid, int i, int j, int& area) {
+        if (i == -1 || i == grid.size() || j == -1 || j == grid[0].size() || grid[i][j] != 1) return;
+        grid[i][j] = 0;
+        area ++;
+        for (int d = 0; d < 4; d ++) visit(grid, i + di[d], j + dj[d], area);
+    }
+public:
+    int maxAreaOfIsland(vector<vector<int>>& grid) {
+        int ans = 0;
+        for (int i = 0; i < grid.size(); i ++) {
+            for (int j = 0; j < grid[0].size(); j ++) {
+                if (grid[i][j] == 1) {
+                    int area = 0;
+                    visit(grid, i, j, area);
+                    ans = max(ans, area);
+                }
+            }
+        }
+        return ans;
+    }
+};
+```
+
+#### Java
+
+```java
+class Solution {
+    private int area;
+    private final int[] di = new int[]{0, 1, 0, -1};
+    private final int[] dj = new int[]{1, 0, -1, 0};
+    private void visit(int[][] grid, int i, int j) {
+        if (i == -1 || i == grid.length || j == -1 || j == grid[0].length || grid[i][j] != 1) return;
+        grid[i][j] = 0;
+        area ++;
+        for (int d = 0; d < 4; d ++) visit(grid, i + di[d], j + dj[d]);
+    }
+
+    public int maxAreaOfIsland(int[][] grid) {
+        int ans = 0;
+        for (int i = 0; i < grid.length; i ++) {
+            for (int j = 0; j < grid[0].length; j ++) {
+                if (grid[i][j] == 1) {
+                    area = 0;
+                    visit(grid, i, j);
+                    ans = Math.max(ans, area);
+                }
+            }
+        }
+        return ans;
+    }
+}
+```
+
+
+
+## [101. 孤岛的总面积](https://kamacoder.com/problempage.php?pid=1173)
+
+#### Java
+
+```java
+import java.util.*;
+
+class Solution {
+    private final int[] di = new int[]{0, 1, 0, -1};
+    private final int[] dj = new int[]{1, 0, -1, 0};
+    private int visit(int[][] grid, int i, int j) {
+        if (grid[i][j] != 1) return 0;
+        int area = 0;
+        Queue<int[]> q = new ArrayDeque<>();
+        q.offer(new int[]{i, j});
+        grid[i][j] = 0;
+        while (!q.isEmpty()) {
+            int[] cur = q.poll();
+            int ci = cur[0], cj = cur[1];
+            area ++;
+            for (int d = 0; d < 4; d ++) {
+                int ni = ci + di[d], nj = cj + dj[d];
+                if (
+                    ni == -1 || 
+                    ni == grid.length || 
+                    nj == -1 || 
+                    nj == grid[0].length || 
+                    grid[ni][nj] != 1) continue;
+                q.offer(new int[]{ni, nj});
+                grid[ni][nj] = 0;
+            }
+        }
+        return area;
+    }
+    
+    public int isolatedIslandsArea(int[][] grid) {
+        int nr = grid.length, nc = grid[0].length;
+        for (int i = 0; i < nr; i ++) {
+            visit(grid, i, 0);
+            visit(grid, i, nc - 1);
+        }
+        for (int j = 0; j < nc; j ++) {
+            visit(grid, 0, j);
+            visit(grid, nr - 1, j);
+        }
+        int areaSum = 0;
+        for (int i = 0; i < nr; i ++) {
+            for (int j = 0; j < nc; j ++) {
+                areaSum += visit(grid, i, j);
+            }
+        }
+        return areaSum;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int nr = sc.nextInt();
+        int nc = sc.nextInt();
+        int[][] grid = new int[nr][nc];
+        for (int i = 0; i < nr; i ++) {
+            for (int j = 0; j < nc; j ++) {
+                grid[i][j] = sc.nextInt();
+            }
+        }
+        
+        Solution s = new Solution();
+        System.out.println(s.isolatedIslandsArea(grid));
+    }
+}
+```
+
+
+
+## [102. 沉没孤岛](https://kamacoder.com/problempage.php?pid=1174)
+
+#### C++
+
+```c++
+#include<iostream>
+#include<vector>
+using namespace std;
+
+class Solution {
+    int di[4] = {0, 1, 0, -1};
+    int dj[4] = {1, 0, -1, 0};
+    void visit(vector<vector<int>>& grid, int i, int j) {
+        if (
+            i == -1 ||
+            i == grid.size() ||
+            j == -1 ||
+            j == grid[0].size() ||
+            grid[i][j] != 1
+        ) return;
+        grid[i][j] = -1;
+        for (int d = 0; d < 4; d ++) visit(grid, i + di[d], j + dj[d]);
+    }
+public:
+    void labelIsolatedIslands(vector<vector<int>>& grid) {
+        int nr = grid.size(), nc = grid[0].size();
+        for (int i = 0; i < nr; i ++) {
+            visit(grid, i, 0);
+            visit(grid, i, nc - 1);
+        }
+        for (int j = 0; j < nc; j ++) {
+            visit(grid, 0, j);
+            visit(grid, nr - 1, j);
+        }
+    }
+};
+
+int main()
+{
+    int nr, nc;
+    cin >> nr >> nc;
+    vector<vector<int>> grid(nr, vector<int>(nc, 0));
+    for (int i = 0; i < nr; i ++) {
+        for (int j = 0; j < nc; j ++) {
+            cin >> grid[i][j];
+        }
+    }
+    Solution s;
+    s.labelIsolatedIslands(grid);
+    for (int i = 0; i < nr; i ++) {
+        for (int j = 0; j < nc; j ++) {
+            if (grid[i][j] == -1) cout << 1;
+            else cout << 0;
+            cout << " ";
+        }
+        cout << endl;
+    }
+}
+```
+
+
+
+## [103. 水流问题](https://kamacoder.com/problempage.php?pid=1175)
+
+#### C++
+
+```c++
+#include<iostream>
+#include<vector>
+
+using namespace std;
+
+class Solution {
+    int di[4] = {0, 1, 0, -1};
+    int dj[4] = {1, 0, -1, 0};
+    bool canReachUpper(vector<vector<bool>>& visited, vector<vector<int>>& grid, int i, int j) {
+        if (i == 0 || j == 0) return true;
+        if (i == grid.size() || j == grid[0].size()) return false;
+        if (visited[i][j]) return false;
+        
+        visited[i][j] = true;
+        for (int d = 0; d < 4; d ++) {
+            int ni = i + di[d], nj = j + dj[d];
+            if (ni == -1 ||
+                ni == grid.size() ||
+                nj == -1 ||
+                nj == grid[0].size() ||
+                visited[ni][nj] ||
+                grid[i][j] < grid[ni][nj] ||
+                !canReachUpper(visited, grid, ni, nj)
+            ) continue;
+            visited[i][j] = false;
+            return true;
+        }
+        visited[i][j] = false;
+        return false;
+    }
+    bool canReachLower(vector<vector<bool>>& visited, vector<vector<int>>& grid, int i, int j) {
+        if (i == grid.size() - 1 || j == grid[0].size() - 1) return true;
+        if (i == -1 || j == -1) return false;
+        if (visited[i][j]) return false;
+        
+        visited[i][j] = true;
+        for (int d = 0; d < 4; d ++) {
+            int ni = i + di[d], nj = j + dj[d];
+            if (ni == -1 ||
+                ni == grid.size() ||
+                nj == -1 ||
+                nj == grid[0].size() ||
+                visited[ni][nj] ||
+                grid[i][j] < grid[ni][nj] ||
+                !canReachLower(visited, grid, ni, nj)
+            ) continue;
+            visited[i][j] = false;
+            return true;
+        }
+        visited[i][j] = false;
+        return false;
+    }
+public:
+    vector<vector<int>> getPoints(vector<vector<int>>& grid) {
+        vector<vector<int>> ans;
+        vector<vector<bool>> visited(grid.size(), vector<bool>(grid[0].size(), false));
+        for (int i = 0; i < grid.size(); i ++) {
+            for (int j = 0; j < grid[0].size(); j ++) {
+                if (canReachUpper(visited, grid, i, j) && canReachLower(visited, grid, i, j)) ans.push_back({i, j});
+            }
+        }
+        return ans;
+    }
+};
+
+int main() {
+    int nr, nc;
+    cin >> nr >> nc;
+    vector<vector<int>> grid(nr, vector<int>(nc, 0));
+    for (int i = 0; i < nr; i ++) {
+        for (int j = 0; j < nc; j ++) {
+            cin >> grid[i][j];
+        }
+    }
+    Solution s;
+    vector<vector<int>> ans = s.getPoints(grid);
+    for (vector<int>& v : ans) {
+        for (int e : v) cout << e << " ";
+        cout << endl;
+    }
+}
+```
+
+
+
+```c++
+#include<iostream>
+#include<vector>
+
+using namespace std;
+
+class Solution {
+    int di[4] = {0, 1, 0, -1};
+    int dj[4] = {1, 0, -1, 0};
+    void visitHigher(vector<vector<int>>& grid, vector<vector<bool>>& visited, int i, int j) {
+        visited[i][j] = true;
+        for (int d = 0; d < 4; d ++) {
+            int ni = i + di[d], nj = j + dj[d];
+            if (
+                ni == -1 || ni == grid.size() ||
+                nj == -1 || nj == grid[0].size() ||
+                visited[ni][nj] ||
+                grid[i][j] > grid[ni][nj]
+            ) continue;
+            visitHigher(grid, visited, ni, nj);
+        }
+    }
+public:
+    vector<vector<int>> getPoints(vector<vector<int>>& grid) {
+        vector<vector<int>> ans;
+        vector<vector<bool>> visitedFromUpper(grid.size(), vector<bool>(grid[0].size(), false));
+        vector<vector<bool>> visitedFromLower(grid.size(), vector<bool>(grid[0].size(), false));
+        for (int i = 0; i < grid.size(); i ++) {
+            visitHigher(grid, visitedFromUpper, i, 0);
+            visitHigher(grid, visitedFromLower, i, grid[0].size() - 1);
+        }
+        for (int j = 0; j < grid[0].size(); j ++) {
+            visitHigher(grid, visitedFromUpper, 0, j);
+            visitHigher(grid, visitedFromLower, grid.size() - 1, j);
+        }
+        for (int i = 0; i < grid.size(); i ++) {
+            for (int j = 0; j < grid[0].size(); j ++) {
+                if (visitedFromUpper[i][j] && visitedFromLower[i][j]) ans.push_back({i, j});
+            }
+        }
+        return ans;
+    }
+};
+
+int main() {
+    int nr, nc;
+    cin >> nr >> nc;
+    vector<vector<int>> grid(nr, vector<int>(nc, 0));
+    for (int i = 0; i < nr; i ++) {
+        for (int j = 0; j < nc; j ++) {
+            cin >> grid[i][j];
+        }
+    }
+    Solution s;
+    vector<vector<int>> ans = s.getPoints(grid);
+    for (vector<int>& v : ans) {
+        for (int e : v) cout << e << " ";
+        cout << endl;
+    }
+}
+```
+
+
+
+## [104. 建造最大岛屿](https://kamacoder.com/problempage.php?pid=1176)
+
+#### Java
+
+```java
+import java.util.*;
+
+class Solution {
+    private final int[] di = new int[]{0, 1, 0, -1};
+    private final int[] dj = new int[]{1, 0, -1, 0};
+    private final List<Integer> rec = new ArrayList<>();
+    private int mark = -1;
+    private int area = 0;
+    private boolean outOfBound(int[][] grid, int i, int j) {
+        return i <= -1 || i >= grid.length || j <= -1 || j >= grid[0].length;
+    }
+    private void visitAndMark(int[][] grid, int i, int j) {
+        if (outOfBound(grid, i, j) || grid[i][j] != 1) return;
+        grid[i][j] = mark;
+        area ++;
+        for (int d = 0; d < 4; d ++) visitAndMark(grid, i + di[d], j + dj[d]);
+    }
+    
+    public int buildLargestIsland(int[][] grid) {
+        for (int i = 0; i < grid.length; i ++) {
+            for (int j = 0; j < grid[0].length; j ++) {
+                if (grid[i][j] == 1) {
+                    area = 0;
+                    visitAndMark(grid, i, j);
+                    rec.add(area); // island -1 -> 0, -2 -> 1; -idx - 1 = mark
+                    mark --;
+                }
+            }
+        }
+        
+        int largestArea = 0;
+        for (int islandArea : rec) largestArea = Math.max(largestArea, islandArea);
+        for (int i = 0; i < grid.length; i ++) {
+            for (int j = 0; j < grid[0].length; j ++) {
+                if (grid[i][j] == 0) {
+                    Set<Integer> nearIsland = new HashSet<>();
+                    for (int d = 0; d < 4; d ++) {
+                        int neari = i + di[d], nearj = j + dj[d];
+                        if (outOfBound(grid, neari, nearj)) continue;
+                        nearIsland.add(grid[neari][nearj]);
+                    }
+                    int nearArea = 1;
+                    for (int island : nearIsland) {
+                        if (island == 0) continue;
+                        int idx = - island - 1;
+                        nearArea += rec.get(idx);
+                    }
+                    largestArea = Math.max(largestArea, nearArea);
+                }
+            }
+        }
+        
+        return largestArea;
+    }
+}
+
+class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int nr = sc.nextInt(), nc = sc.nextInt();
+        int[][] grid = new int[nr][nc];
+        for (int i = 0; i < nr; i ++) {
+            for (int j = 0; j < nc; j ++) {
+                grid[i][j] = sc.nextInt();
+            }
+        }
+        Solution s = new Solution();
+        System.out.println(s.buildLargestIsland(grid));
+    }
+}
+```
+
+
+
+## [110. 字符串接龙](https://kamacoder.com/problempage.php?pid=1183)
+
+#### Java
+
+```java
+import java.util.*;
+
+class Solution {
+    private boolean ok(String s1, String s2) {
+        if (s1.length() != s2.length()) return false;
+        int cnt = 0;
+        for (int i = 0; i < s1.length(); i ++) {
+            if (s1.charAt(i) != s2.charAt(i)) cnt ++;
+            if (cnt > 1) return false;
+        }
+        return true;
+    }
+    
+    public int minWordsCount(String targetWord, String[] words) {
+        int cnt = 0;
+        boolean[] used = new boolean[words.length];
+        Queue<Integer> q = new ArrayDeque<>();
+        q.offer(0);
+        used[0] = true;
+        while (!q.isEmpty()) {
+            int levelSize = q.size();
+            cnt ++;
+            for (int i = 0; i < levelSize; i ++) {
+                int cur = q.poll();
+                String curWord = words[cur];
+                for (int nxt = 0; nxt < words.length; nxt ++) {
+                    if (used[nxt]) continue;
+                    String nxtWord = words[nxt];
+                    if (!ok(curWord, nxtWord)) continue;
+                    if (ok(targetWord, nxtWord)) return cnt;
+                    q.offer(nxt);
+                    used[nxt] = true;
+                }
+            }
+        }
+        return 0;
+    }
+}
+
+class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int wordsCnt = sc.nextInt();
+        String[] words = new String[wordsCnt + 1];
+        words[0] = sc.next();
+        String targetWord = sc.next();
+        for (int i = 0; i < wordsCnt; i ++) words[1 + i] = sc.next();
+        Solution s = new Solution();
+        int ans = s.minWordsCount(targetWord, words);
+        System.out.println(ans == 0 ? 0 : ans + 2);
+    }
+}
+```
+
+
+
+### [127. Word Ladder](https://leetcode.com/problems/word-ladder/)
+
+#### Java
+
+在 leetcode 中, endWord 一定在 list 中, 而 beginWord 不一定在 list 中, 于是可以倒着搜索: 即从 end 出发, 搜索 begin
+
+```java
+class Solution {
+    private boolean ok(String a, String b) {
+        if (a.length() != b.length()) return false;
+        int err = 0;
+        for (int i = 0; i < a.length(); i ++) {
+            if (a.charAt(i) != b.charAt(i)) err ++;
+            if (err > 1) return false;
+        }
+        return true;
+    }
+
+    public int ladderLength(String beginWord, String endWord, List<String> wordList) {
+        int endWordIdx = 0;
+        for (; endWordIdx < wordList.size(); endWordIdx ++) if (endWord.equals(wordList.get(endWordIdx))) break;
+        if (endWordIdx == wordList.size()) return 0;
+		
+        Queue<Integer> q = new ArrayDeque<>();
+        boolean[] used = new boolean[wordList.size()];
+        q.offer(endWordIdx);
+        used[endWordIdx] = true;
+        
+        int cnt = 1;
+        while (!q.isEmpty()) {
+            int lvlSz = q.size();
+            cnt ++;
+            for (int i = 0; i < lvlSz; i ++) {
+                int cur = q.poll();
+                String curWord = wordList.get(cur);
+                if (ok(curWord, beginWord)) return cnt;
+                for (int nxt = 0; nxt < wordList.size(); nxt ++) {
+                    if (used[nxt]) continue;
+                    String nxtWord = wordList.get(nxt);
+                    if (!ok(curWord, nxtWord)) continue;
+                    q.offer(nxt);
+                    used[nxt] = true;
+                }
+            }
+        }
+        return 0;
+    }
+}
+```
+
+
+
+#### C++
+
+```c++
+class Solution {
+    bool ok(string& a, string& b) {
+        if (a.size() != b.size()) return false;
+        int err = 0;
+        for (int i = 0; i < a.size(); i ++) {
+            if (a[i] != b[i]) err ++;
+            if (err > 1) return false;
+        }
+        return true;
+    }
+public:
+    int ladderLength(string beginWord, string endWord, vector<string>& wordList) {
+        int endWordIdx = 0;
+        for (; endWordIdx < wordList.size(); endWordIdx ++) if (wordList[endWordIdx] == endWord) break;
+        if (endWordIdx == wordList.size()) return 0;
+
+        queue<int> q;
+        vector<bool> used(wordList.size(), false);
+        q.push(endWordIdx);
+        used[endWordIdx] = true;
+        
+        int cnt = 1;
+        while (!q.empty()) {
+            int lvlSz = q.size();
+            cnt ++;
+            for (int i = 0; i < lvlSz; i ++) {
+                int cur = q.front(); q.pop();
+                string curWord = wordList[cur];
+                if (ok(curWord, beginWord)) return cnt;
+                for (int nxt = 0; nxt < wordList.size(); nxt ++) {
+                    if (used[nxt]) continue;
+                    string nxtWord = wordList[nxt];
+                    if (!ok(curWord, nxtWord)) continue;
+                    q.push(nxt);
+                    used[nxt] = true;
+                }
+            }
+        }
+        return 0;
+    }
+};
+```
+
+
+
+### [126. Word Ladder II](https://leetcode.com/problems/word-ladder-ii/)
+
+*BFS + Backtrack*
+
+#### Java
+
+```java
+class Solution {
+    private boolean ok(String a, String b) {
+        if (a.length() != b.length()) return false;
+        int err = 0;
+        for (int i = 0; i < a.length(); i ++) {
+            if (a.charAt(i) != b.charAt(i)) err ++;
+            if (err > 1) return false;
+        }
+        return true;
+    }
+
+    private List<List<String>> bfs(String beginWord, String endWord, List<String> wordList) {
+        int endWordIdx = 0;
+        for (; endWordIdx < wordList.size(); endWordIdx ++) if (endWord.equals(wordList.get(endWordIdx))) break;
+        if (endWordIdx == wordList.size()) return List.of();
+
+        List<List<String>> lvls = new LinkedList<>();
+        Queue<Integer> q = new ArrayDeque<>();
+        boolean[] used = new boolean[wordList.size()];
+        q.offer(endWordIdx);
+        used[endWordIdx] = true;
+
+        while (!q.isEmpty()) {
+            int lvlSz = q.size();
+            List<String> lvl = new ArrayList<>();
+            boolean findInLvl = false;
+
+            for (int i = 0; i < lvlSz; i ++) {
+                int cur = q.poll();
+                String curWord = wordList.get(cur);
+                lvl.add(curWord);
+                
+                if (ok(curWord, beginWord)) findInLvl = true;
+
+                for (int nxt = 0; nxt < wordList.size(); nxt ++) {
+                    if (used[nxt]) continue;
+                    String nxtWord = wordList.get(nxt);
+                    if (!ok(curWord, nxtWord)) continue;
+                    q.offer(nxt);
+                    used[nxt] = true;
+                }
+            }
+            lvls.addFirst(lvl);
+            if (findInLvl) {
+                lvls.addFirst(List.of(beginWord));
+                return lvls; // 只有这里 return 出来的才是合法 lvls
+            }
+        }
+        return List.of(); // 能走到这一步, 说明没有合适的 lvls
+    }
+
+    private void backtrack(List<List<String>> paths, List<String> path, List<List<String>> lvls, int lvlId) {
+        if (path.size() == lvls.size()) {
+            paths.add(new ArrayList<>(path));
+            return;
+        }
+        String lastWord = path.getLast();
+        for (String word : lvls.get(lvlId)) {
+            if (ok(word, lastWord)) {
+                path.add(word);
+                backtrack(paths, path, lvls, lvlId + 1);
+                path.removeLast();
+            }
+        }
+    }
+
+    public List<List<String>> findLadders(String beginWord, String endWord, List<String> wordList) {
+        List<List<String>> paths = new ArrayList<>();
+        List<List<String>> lvls = bfs(beginWord, endWord, wordList);
+        if (lvls == null || lvls.isEmpty()) return paths;
+        List<String> path = new ArrayList<>();
+        path.add(beginWord);
+        backtrack(paths, path, lvls, 1);
+        return paths;
+    }
+}
+```
+
+#### C++
+
+```c++
+class Solution {
+    bool ok(string& a, string& b) {
+        if (a.size() != b.size()) return false;
+        int err = 0;
+        for (int i = 0; i < a.size(); i ++) {
+            if (a[i] != b[i]) err ++;
+            if (err > 1) return false;
+        }
+        return true;
+    }
+
+    vector<vector<string>> bfs(string& beginWord, string& endWord, vector<string>& wordList) {
+        int endWordIdx = 0;
+        for (; endWordIdx < wordList.size(); endWordIdx ++) if (endWord == wordList[endWordIdx]) break;
+        if (endWordIdx == wordList.size()) return {};
+
+        vector<vector<string>> levels;
+        queue<int> q;
+        vector<bool> used(wordList.size(), false);
+        q.push(endWordIdx);
+        used[endWordIdx] = true;
+        while (!q.empty()) {
+            int lvlsz = q.size();
+            vector<string> level;
+            bool findInLevel = false;
+            for (int i = 0; i < lvlsz; i ++) {
+                int cur = q.front(); q.pop();
+                string curWord = wordList[cur];
+                level.push_back(curWord);
+                if (ok(curWord, beginWord)) findInLevel = true;
+                for (int nxt = 0; nxt < wordList.size(); nxt ++) {
+                    if (used[nxt]) continue;
+                    string nxtWord = wordList[nxt];
+                    if (!ok(curWord, nxtWord)) continue;
+                    q.push(nxt);
+                    used[nxt] = true;
+                }
+            }
+            levels.push_back(level);
+            if (findInLevel) {
+                levels.push_back({beginWord});
+                return levels;
+            }
+        }
+        return {};
+    }
+
+    void backtrack(vector<vector<string>>& paths, vector<string>& path, vector<vector<string>>& levels, int lvlId) {
+        if (path.size() == levels.size()) {
+            paths.push_back(path);
+            return;
+        }
+        string preWord = path.back();
+        for (string& curWord : levels[lvlId]) {
+            if (ok(preWord, curWord)) {
+                path.push_back(curWord);
+                backtrack(paths, path, levels, lvlId - 1);
+                path.pop_back();
+            }
+        }
+    }
+
+public:
+    vector<vector<string>> findLadders(string beginWord, string endWord, vector<string>& wordList) {
+        vector<vector<string>> levels = bfs(beginWord, endWord, wordList);
+        if (levels.empty()) return {};
+        vector<vector<string>> paths;
+        vector<string> path = {beginWord};
+        backtrack(paths, path, levels, levels.size() - 2);
+        return paths;
+    }
+};
+```
+
+
+
+## [105. 有向图的完全可达性](https://kamacoder.com/problempage.php?pid=1177)
+
+#### Java
+
+*BFS*
+
+```java
+import java.util.*;
+
+class Solution {
+    public boolean accessible(List<Integer>[] edges) {
+        boolean[] reached = new boolean[edges.length];
+        Queue<Integer> q = new ArrayDeque<>();
+        q.offer(0);
+        reached[0] = true;
+        while (!q.isEmpty()) {
+            int cur = q.poll();
+            for (int nxt : edges[cur]) {
+                if (reached[nxt]) continue;
+                q.offer(nxt);
+                reached[nxt] = true;
+            }
+        }
+        for (boolean b : reached) if (!b) return false;
+        return true;
+    }
+}
+
+class Main {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int nv = sc.nextInt();
+        int ne = sc.nextInt();
+        List<Integer>[] edges = new List[nv];
+        for (int i = 0; i < nv; i ++) edges[i] = new ArrayList<>();
+        
+        for (int i = 0; i < ne; i ++) {
+            int v = sc.nextInt() - 1;
+            edges[v].add(sc.nextInt() - 1);
+        }
+        
+        Solution s = new Solution();
+        if (s.accessible(edges)) System.out.println(1);
+        else System.out.println(-1);
+    }
+}
+```
+
+
+
+#### C++
+
+*BFS*
+
+```c++
+#include<iostream>
+#include<vector>
+#include<queue>
+
+using namespace std;
+
+class Solution {
+public:
+    bool accessible(vector<vector<int>>& edges) {
+        vector<bool> reached(edges.size(), false);
+        queue<int> q;
+        q.push(0);
+        reached[0] = true;
+        while (!q.empty()) {
+            int cur = q.front(); q.pop();
+            for (int nxt : edges[cur]) {
+                if (reached[nxt]) continue;
+                q.push(nxt);
+                reached[nxt] = true;
+            }
+        }
+        for (bool b : reached) if (!b) return false;
+        return true;
+    }
+};
+
+int main() {
+    int nv, ne;
+    cin >> nv >> ne;
+    vector<vector<int>> edges(nv, vector<int>{});
+    for (int i = 0; i < ne; i ++) {
+        int v, vneighbor;
+        cin >> v >> vneighbor;
+        edges[v - 1].push_back(vneighbor - 1);
+    }
+    
+    Solution s;
+    if (s.accessible(edges)) cout << 1 << endl;
+    else cout << -1 << endl;
+}
+```
+
+
+
+*DFS*
+
+正确写法
+
+```c++
+#include<iostream>
+#include<vector>
+
+using namespace std;
+
+class Solution {
+    void dfs(vector<vector<int>>& edges, vector<bool>& reached, int cur) { // 在cur上开始搜索, 搜到最深处, 有环没关系
+        reached[cur] = true;
+        for (int nxt : edges[cur]) if (!reached[nxt]) dfs(edges, reached, nxt); // if 确保不会进入环
+    }
+public:
+    bool accessible(vector<vector<int>>& edges) {
+        vector<bool> reached(edges.size(), false);
+        dfs(edges, reached, 0);
+        for (bool b : reached) if (!b) return false;
+        return true;
+    }
+};
+
+int main() {
+    int nv, ne;
+    cin >> nv >> ne;
+    vector<vector<int>> edges(nv, vector<int>{});
+    for (int i = 0; i < ne; i ++) {
+        int v, vneighbor;
+        cin >> v >> vneighbor;
+        edges[v - 1].push_back(vneighbor - 1);
+    }
+    
+    Solution s;
+    if (s.accessible(edges)) cout << 1 << endl;
+    else cout << -1 << endl;
+}
+```
+
+
+
+错误写法
+
+```c++
+#include<iostream>
+#include<vector>
+
+using namespace std;
+
+class Solution {
+    bool dfs(vector<vector<int>>& edges, vector<char>& state, int cur) { // 在cur上开始搜索, 搜到最深处 (有环则退出)
+        if (state[cur] == 1) return false; // 遇到环了
+        else if (state[cur] == 2) return true;
+        else {
+            state[cur] = 1;
+            for (int nxt : edges[cur]) if (!dfs(edges, state, nxt)) return false;
+            state[cur] = 2;
+            return true;
+        }
+    }
+public:
+    bool accessible(vector<vector<int>>& edges) {
+        vector<char> state(edges.size(), 0);
+        dfs(edges, state, 0);
+        for (char s : state) if (s != 2) return false;
+        return true;
+    }
+};
+
+int main() {
+    int nv, ne;
+    cin >> nv >> ne;
+    vector<vector<int>> edges(nv, vector<int>{});
+    for (int i = 0; i < ne; i ++) {
+        int v, vneighbor;
+        cin >> v >> vneighbor;
+        edges[v - 1].push_back(vneighbor - 1);
+    }
+    
+    Solution s;
+    if (s.accessible(edges)) cout << 1 << endl;
+    else cout << -1 << endl;
+}
+```
+
+
+
+### [207. Course Schedule](https://leetcode.com/problems/course-schedule/)
+
+本题与上面最大的差异在于: **除了要判断全体可达, 还要确定有没有环**
+
+#### Java
+
+*BFS*
+
+```java
+class Solution {
+    public boolean canFinish(int numCourses, int[][] prerequisites) {
+        List<Integer>[] edges = new ArrayList[numCourses];
+        for (int i = 0; i < numCourses; i ++) edges[i] = new ArrayList<>();
+        int[] indeg = new int[numCourses]; // 入度
+        for (int[] prerequisite : prerequisites) {
+            int curId = prerequisite[1];
+            int nxtId = prerequisite[0];
+            indeg[nxtId] ++;
+            edges[curId].addLast(nxtId);
+        }
+        List<Integer> q = new LinkedList<>(); // q 保存可以学的课 (indeg = 0 的课)
+        for (int id = 0; id < numCourses; id ++) if (indeg[id] == 0) q.addLast(id);
+        int cnt = 0;
+        while (!q.isEmpty()) {
+            int curId = q.removeFirst();
+            cnt ++; // 修完 curId
+            for (int nxtId : edges[curId]) {
+                indeg[nxtId] --; // curId 的 nxt 入度减一
+                if (indeg[nxtId] == 0) q.addLast(nxtId); // 当入度为0, 即可加入队列
+            }
+        }
+        return cnt == numCourses;
+    }
+}
+```
+
+
+
+*DFS - Recursion*
+
+```java
+class Solution {
+    private List<Integer>[] edges;
+    private byte[] states; // 0 未搜索, 1 正在搜索, 2 完成搜索
+    private boolean dfs(int curId) { // 在 curId 上开始搜索, 搜到最深处 (有环则退出)
+        states[curId] = (byte)1; // 正在搜索
+        for (int nxtId : edges[curId]) {
+            if (states[nxtId] == (byte)0 && !dfs(nxtId)) return false;
+            else if (states[nxtId] == (byte)1) return false;
+			// 遇到state = 2 的点, 啥也不做
+        }
+        states[curId] = (byte)2;
+        return true;
+    }
+    
+    public boolean canFinish(int numCourses, int[][] prerequisites) {
+        edges = new ArrayList[numCourses];
+        for (int i = 0; i < numCourses; i ++) edges[i] = new ArrayList<>();
+        states = new byte[numCourses];
+        for (int[] prerequisite : prerequisites) {
+            int curId = prerequisite[1];
+            int nxtId = prerequisite[0];
+            edges[curId].addLast(nxtId);
+        }
+        for (int id = 0; id < numCourses; id ++) if (states[id] == (byte)0 && !dfs(id)) return false;
+        return true;
+    }
+}
+```
+
+*DFS - Iteration*
+
+```java
+class Solution {
+    public boolean canFinish(int numCourses, int[][] prerequisites) {
+        List<Integer>[] edges = new ArrayList[numCourses];
+        for (int i = 0; i < numCourses; i ++) edges[i] = new ArrayList<>();
+        byte[] states = new byte[numCourses];
+        for (int[] prerequisite : prerequisites) {
+            int curId = prerequisite[1];
+            int nxtId = prerequisite[0];
+            edges[curId].addLast(nxtId);
+        }
+        List<Integer> stk = new ArrayList<>();
+        for (int id = 0; id < numCourses; id ++) {
+            stk.clear();
+            if (states[id] == (byte)0) {
+                stk.addLast(id);
+                while (!stk.isEmpty()) {
+                    int curId = stk.removeLast();
+                    if (states[curId] == (byte)0) {
+                        states[curId] = (byte)1;
+                        stk.addLast(curId);
+                        for (int nxtId : edges[curId]) {
+                            if (states[nxtId] == (byte) 0) stk.addLast(nxtId);
+                            else if (states[nxtId] == (byte) 1) return false;
+                        }
+                    } else if (states[curId] == (byte) 1) states[curId] = (byte) 2;
+                }
+            }
+        }
+        return true;
+    }
+}
+```
+
+用以上状态记录的思想, 可以很清楚地写使用stack来遍历二叉树的问题
+
+```java
+class Solution {
+    public List<Integer> inorderTraversal(TreeNode root) {
+        List<Integer> ans = new ArrayList<>();
+        if (root == null) return ans;
+
+        Map<TreeNode, Integer> state = new HashMap<>();  // 0: 未访问, 1: 正在访问, 2: 访问过的
+        List<TreeNode> stk = new ArrayList<>();
+        stk.addLast(root);
+        while (!stk.isEmpty()) {
+            TreeNode cur = stk.removeLast();
+            if (state.getOrDefault(cur, 0) == 0) {
+                state.put(cur, 1);
+                if (cur.right != null) stk.addLast(cur.right);
+                stk.addLast(cur);
+                if (cur.left != null) stk.addLast(cur.left);
+            } else if (state.getOrDefault(cur, 0) == 1) {
+                state.put(cur, 2);
+                ans.add(cur.val);
+            } else {}
+        }
+        return ans;
+    }
+}
+```
+
+
+
+#### C++
+
+*BFS*
+
+```c++
+class Solution {
+public:
+    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) {
+        vector<vector<int>> edges(numCourses, vector<int>{});
+        vector<int> indeg(numCourses, 0);
+        for (auto& prerequisite : prerequisites) {
+            edges[prerequisite[1]].push_back(prerequisite[0]);
+            indeg[prerequisite[0]] ++;
+        }
+        queue<int> q;
+        for (int cid = 0; cid < numCourses; cid ++) if (indeg[cid] == 0) q.push(cid);
+        while (!q.empty()) {
+            int cur = q.front(); q.pop();
+            for (int nxt : edges[cur]) {
+                indeg[nxt] --;
+                if (indeg[nxt] == 0) q.push(nxt);
+            }
+        }
+        for (int deg : indeg) if (deg > 0) return false;
+        return true;
+    }
+};
+```
+
+
+
+*DFS*
+
+```c++
+class Solution {
+    bool dfs(vector<vector<int>>& edges, vector<char>& state, int cur) {
+        if (state[cur] == 2) return true;
+        else if (state[cur] == 1) return false;
+        else {
+            state[cur] = 1;
+            for (int nxt : edges[cur]) if (!dfs(edges, state, nxt)) return false;
+            state[cur] = 2;
+            return true;
+        }
+    }
+public:
+    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) {
+        vector<vector<int>> edges(numCourses, vector<int>{});
+        for (auto& prerequisite : prerequisites) edges[prerequisite[1]].push_back(prerequisite[0]);
+        vector<char> state(numCourses, 0);
+        for (int cid = 0; cid < numCourses; cid ++) if (!dfs(edges, state, cid)) return false;
+        for (char s : state) if (s != 2) return false;
+        return true;
+    }
+};
+```
+
+
+
+
+
+### [210. Course Schedule II](https://leetcode.com/problems/course-schedule-ii/)
+
+#### Java
+
+*BFS*
+
+这里的BFS是特殊的BFS, 它不是简单的把 未访问的 neighbor 全部加入, 而是要根据 neighbors 的入度来决定是否加入队列
+
+相当于, 普通的 BFS 的节点状态只有两种, 因此可以使用 bool; 这里每个节点的状态其实是它们的入度, 因此要使用 int
+
+```java
+class Solution {
+    public int[] findOrder(int numCourses, int[][] prerequisites) {
+        List<Integer>[] edges = new ArrayList[numCourses];
+        for (int i = 0; i < numCourses; i ++) edges[i] = new ArrayList<>();
+        int[] indeg = new int[numCourses];
+        for (int[] prerequisite : prerequisites) {
+            int curId = prerequisite[1];
+            int nxtId = prerequisite[0];
+            indeg[nxtId] ++;
+            edges[curId].addLast(nxtId);
+        }
+        List<Integer> q = new LinkedList<>(); // q 保存可以学的课 (indeg = 0 的课)
+        for (int id = 0; id < numCourses; id ++) if (indeg[id] == 0) q.addLast(id);
+        List<Integer> ans = new ArrayList<>();
+        while (!q.isEmpty()) {
+            int curId = q.removeFirst();
+            ans.addLast(curId);
+            for (int nxtId : edges[curId]) {
+                indeg[nxtId] --;
+                if (indeg[nxtId] == 0) q.addLast(nxtId);
+            }
+        }
+        return ans.size() == numCourses ? ans.stream().mapToInt(Integer::intValue).toArray() : new int[0];
+    }
+}
+```
+
+
+
+*DFS - Recursion*
+
+```java
+class Solution {
+    private List<Integer>[] edges;
+    private byte[] states;
+    private boolean dfs(List<Integer> path, int curId) {
+        states[curId] = (byte)1;
+        for (int nxtId : edges[curId]) {
+            if (states[nxtId] == (byte)0) {
+                if (!dfs(path, nxtId)) return false;
+            } else if (states[nxtId] == (byte)1) return false;
+        }
+        states[curId] = (byte)2;
+        path.addFirst(curId); // 注意这里要addFirst()
+        return true;
+    }
+
+    public int[] findOrder(int numCourses, int[][] prerequisites) {
+        edges = new ArrayList[numCourses];
+        for (int i = 0; i < numCourses; i ++) edges[i] = new ArrayList<>();
+        states = new byte[numCourses];
+        for (int[] prerequisite : prerequisites) {
+            int curId = prerequisite[1];
+            int nxtId = prerequisite[0];
+            edges[curId].addLast(nxtId);
+        }
+        List<Integer> ans = new LinkedList<>();
+        for (int id = 0; id < numCourses; id ++) if (states[id] == (byte)0 && !dfs(ans, id)) return new int[0];
+        return ans.stream().mapToInt(Integer::intValue).toArray();
+    }
+}
+```
+
+
+
+```
+edges: 2 -> 3 -> 0 -> 1
+
+从 0 开始 dfs:
+dfs(0)
+	dfs(1)
+		收集结果 path = [1]
+	end dfs(1)
+	收集结果 path = [0, 1]
+end dfs(0)
+
+由于 1 已经收集完成, 直接跳过
+
+接着从 2 开始 dfs:
+dfs(2)
+	dfs(3)
+		收集结果 path = [3, 0, 1]
+	end dfs(3)
+	收集结果 path = [2, 3, 0, 1]
+end dfs(2)
+
+3 已被收集过, 完成整个流程
+
+可以看出, dfs 函数中结果搜集写在函数结尾 (递归之后), 并且使用 addFirst 而不是 addLast 是有讲究的:
+我们收集课程的位置只能是dfs函数中, 执行完下一层递归之后, 也就是 state[cur] 可以变成 2 的时候
+这是因为, 必须等一门课所有的后修课程被加入 path 之后, 才可以把它加入 path
+至于是 addFirst 还是 addLast, 这个不重要, 如果dfs中使用的是 addLast(), 可以在收集完成后翻转path即可
+```
+
+
+
+*DFS - Iteration*
+
+正确写法
+
+```java
+class Solution {
+    public int[] findOrder(int numCourses, int[][] prerequisites) {
+        List<Integer>[] edges = new ArrayList[numCourses];
+        for (int i = 0; i < numCourses; i ++) edges[i] = new ArrayList<>();
+        byte[] states = new byte[numCourses];
+        for (int[] prerequisite : prerequisites) {
+            int curId = prerequisite[1];
+            int nxtId = prerequisite[0];
+            edges[curId].addLast(nxtId);
+        }
+        List<Integer> ans = new LinkedList<>();
+        List<Integer> stk = new ArrayList<>();
+        for (int id = 0; id < numCourses; id ++) {
+            stk.clear();
+            if (states[id] == (byte)0) { // 深度搜索, 把从 i 开始, 把可到达的点全部走一遍
+                stk.addLast(id);
+                while (!stk.isEmpty()) {
+                    int curId = stk.removeLast();
+                    if (states[curId] == (byte)0) {
+                        states[curId] = (byte)1;
+                        stk.addLast(curId); // 要把当前的给加进去 状态是 1 还没有真正结束访问
+                        for (int nxtId : edges[curId]) {
+                            if (states[nxtId] == (byte)0) stk.addLast(nxtId);
+                            else if (states[nxtId] == (byte)1) return new int[0];
+                        }
+                    } else if (states[curId] == (byte)1) {
+                        states[curId] = (byte)2;
+                        ans.addFirst(curId); // 在这里收集结果, 以免重复
+                    }
+                }
+
+            }
+        }
+        return ans.stream().mapToInt(Integer::intValue).toArray();
+    }
+}
+```
+
+```
+edges = [[1, 7],[],[],[],[6],[0],[2],[1]]
+ans = [5,4,6,3,2,0,7,1]
+---
+[0{1}, 1{0}, 7{0}]
+[0{1}, 1{0}, 7{1}, 1{0}]
+[0{1}, 1{1}, 7{1}, 1{1}]
+[0, 1{2}, 7{1}]
+[0, 1{2}]  // 没有重复收集
+[0]
+[]
+[2]
+[]
+[3]
+[]
+[4, 6]
+[4, 6]
+[4]
+[]
+[5]
+[]
+```
+
+错误写法
+
+```java
+class Solution {
+    public int[] findOrder(int numCourses, int[][] prerequisites) {
+        List<Integer>[] edges = new ArrayList[numCourses];
+        for (int i = 0; i < numCourses; i ++) edges[i] = new ArrayList<>();
+        byte[] states = new byte[numCourses];
+        for (int[] prerequisite : prerequisites) {
+            int curId = prerequisite[1];
+            int nxtId = prerequisite[0];
+            edges[curId].addLast(nxtId);
+        }
+        List<Integer> ans = new LinkedList<>();
+        List<Integer> stk = new ArrayList<>();
+        for (int id = 0; id < numCourses; id ++) {
+            stk.clear();
+            if (states[id] == (byte)0) {
+                stk.addLast(id);
+                while (!stk.isEmpty()) {
+                    int curId = stk.removeLast();
+                    if (states[curId] == (byte)0) {
+                        states[curId] = (byte)1;
+                        stk.addLast(curId);
+                        for (int nxtId : edges[curId]) {
+                            if (states[nxtId] == (byte)0) stk.addLast(nxtId);
+                            else if (states[nxtId] == (byte)1) return new int[0];
+                        }
+                    } else if (states[curId] == (byte)1) {
+                        states[curId] = (byte)2;
+                        stk.addLast(curId);
+                    } else {
+                        ans.addFirst(curId); // 产生了重复收集的问题
+                    }
+                }
+
+            }
+        }
+        return ans.stream().mapToInt(Integer::intValue).toArray();
+    }
+}
+```
+
+```
+edges = [[1, 7],[],[],[],[6],[0],[2],[1]]
+worng ans = [5,4,6,3,2,0,1,7,1]
+---
+在数字后用{}表示状态
+[0{1}, 1{0}, 7{0}]
+[0{1}, 1{0}, 7{1}, 1{0}]
+[0{1}, 1{1}, 7{1}, 1{1}]
+[0{1}, 1{2}, 7{1}, 1{2}]
+[0{1}, 1{2}, 7{1}]
+[0{1}, 1{2}, 7{2}]
+[0{1}, 1{2}]  // 重复收集了 1 
+[0]
+[0]
+[]
+[2]
+[2]
+[]
+[3]
+[3]
+[]
+[4, 6]
+[4, 6]
+[4, 6]
+[4]
+[4]
+[]
+[5]
+[5]
+[]
+```
+
+**图的 DFS 与二叉树的 DFS 一个显著的不同就是其维护的 stack 中, 可能存在重复的结点, 而二叉树的 stack 则不可能存在重复结点, 因此, 在图的 DFS 中, 我们必须引入 state 数组, 而不能简单地像处理二叉树那样使用 null 标记.**
+
+```
+Graph:
+     0
+    / \
+   1   2
+    \ /
+     3
+stack:
+[]
+[0]
+[0,1,2]
+[0,1,2,3]
+[0,1,2]
+[0,1]
+[0,1,3]
+[0,1]
+[0]
+[]
+```
+
+
+
+#### C++
+
+*BFS*
+
+```c++
+class Solution {
+public:
+    vector<int> findOrder(int numCourses, vector<vector<int>>& prerequisites) {
+        vector<vector<int>> edges(numCourses, vector<int>{});
+        vector<int> indeg(numCourses, 0);
+        for (auto& prerequisite : prerequisites) {
+            edges[prerequisite[1]].push_back(prerequisite[0]);
+            indeg[prerequisite[0]] ++;
+        }
+        vector<int> studyOrder;
+        queue<int> q;
+        for (int cid = 0; cid < numCourses; cid ++) if (indeg[cid] == 0) q.push(cid);
+        while (!q.empty()) {
+            int cur = q.front(); q.pop();
+            studyOrder.push_back(cur);
+            for (int nxt : edges[cur]) {
+                indeg[nxt] --;
+                if (indeg[nxt] == 0) q.push(nxt);
+            }
+        }
+        if (studyOrder.size() != numCourses) return {};
+        return studyOrder;
+    }
+};
+```
+
+
+
+*DFS*
+
+```c++
+class Solution {
+    bool dfs(vector<vector<int>>& edges, vector<char>& state, vector<int>& studyOrder, int cur) {
+        if (state[cur] == 2) return true;
+        else if (state[cur] == 1) return false;
+        else {
+            state[cur] = 1;
+            for (int nxt : edges[cur]) if (!dfs(edges, state, studyOrder, nxt)) return false;
+            studyOrder.push_back(cur);
+            state[cur] = 2;
+            return true;
+        }
+    }
+public:
+    vector<int> findOrder(int numCourses, vector<vector<int>>& prerequisites) {
+        vector<char> state(numCourses, 0);
+        vector<vector<int>> edges(numCourses, vector<int>{});
+        for (auto& prerequisite : prerequisites) edges[prerequisite[1]].push_back(prerequisite[0]);
+        vector<int> studyOrder;
+        for (int cid = 0; cid < numCourses; cid ++) if (state[cid] == 0 && !dfs(edges, state, studyOrder, cid)) return {};
+        reverse(studyOrder.begin(), studyOrder.end());
+        return studyOrder;
+    }
+};
+```
+
+
+
+
+
+## [106. 岛屿的周长](https://kamacoder.com/problempage.php?pid=1178)
+
+#### C++
+
+*DFS*
+
+```c++
+#include<iostream>
+#include<vector>
+
+using namespace std;
+ 
+class Solution {
+    int di[4] = {0, 1, 0, -1};
+    int dj[4] = {1, 0, -1, 0};
+    bool outOfBound(vector<vector<int>> grid, int i, int j) {
+        return i == -1 || i == grid.size() || j == -1 || j == grid[0].size();
+    }
+    void dfs(vector<vector<int>>& grid, int& perimeter, int i, int j) {
+        if (outOfBound(grid, i, j) || grid[i][j] != 1) return;
+        grid[i][j] = -1;
+        for (int d = 0; d < 4; d ++) {
+            int ni = i + di[d], nj = j + dj[d];
+            if (outOfBound(grid, ni, nj) || grid[ni][nj] == 0) perimeter ++;
+            dfs(grid, perimeter, ni, nj);
+        }
+    }
+public:
+    int islandsPerimeter(vector<vector<int>>& grid) {
+        int perimeter = 0;
+        for (int i = 0; i < grid.size(); i ++) {
+            for (int j = 0; j < grid[0].size(); j ++) {
+                if (grid[i][j] == 1) dfs(grid, perimeter, i, j);
+            }
+        }
+        return perimeter;
+    }
+};
+ 
+int main() {
+    int nr, nc;
+    cin >> nr >> nc;
+    vector<vector<int>> grid(nr, vector<int>(nc, 0));
+    for (int i = 0; i < nr; i ++) {
+        for (int j = 0; j < nc; j ++) {
+            cin >> grid[i][j];
+        }
+    }
+    Solution s;
+    std::cout << s.islandsPerimeter(grid) << std::endl;
+}
+```
+
+
+
+# Extra
+
+## [841. Keys and Rooms](https://leetcode.com/problems/keys-and-rooms/)
+
+#### Java
+
+*暴力模拟*
+
+```java
+class Solution {
+    public boolean canVisitAllRooms(List<List<Integer>> rooms) {
+        boolean[] canVisit = new boolean[rooms.size()];
+        canVisit[0] = true;
+        while (true) {
+            boolean hasOpen = false;
+            for (int i = 0; i < rooms.size(); i ++) {
+                if (!canVisit[i]) continue;
+                for (int roomId : rooms.get(i)) {
+                    if (!canVisit[roomId]) {
+                        canVisit[roomId] = true;
+                        hasOpen = true;
+                    }
+                }
+            }
+
+            if (!hasOpen) break;
+        }
+        for (boolean can : canVisit) if (!can) return false;
+        return true;
+    }
+}
+```
+
+*DFS*
+
+```java
+class Solution {
+    public boolean canVisitAllRooms(List<List<Integer>> rooms) {
+        boolean[] visited = new boolean[rooms.size()];
+        visit(rooms, visited, 0);
+        for (boolean v : visited) if (!v) return false;
+        return true;
+    }
+
+    private void visit(List<List<Integer>> rooms, boolean[] visited, int id) {
+        if (visited[id]) return;
+        visited[id] = true;
+        for (int nxtId : rooms.get(id)) visit(rooms, visited, nxtId);
+    }
+}
+```
+
+也可以用栈来写
+
+```java
+class Solution {
+    public boolean canVisitAllRooms(List<List<Integer>> rooms) {
+        List<Integer> stk = new ArrayList<>();
+        boolean[] visited = new boolean[rooms.size()];
+        stk.add(0);
+        while (!stk.isEmpty()) {
+            int id = stk.removeLast();
+            visited[id] = true;
+            for (int nxtId : rooms.get(id)) {
+                if (visited[nxtId]) continue;
+                stk.addLast(nxtId);
+            }
+        }
+        for (boolean v : visited) if (!v) return false;
+        return true;
+    }
+}
+```
+
+
+
+*BFS*
+
+```java
+class Solution {
+    public boolean canVisitAllRooms(List<List<Integer>> rooms) {
+        LinkedList<Integer> q = new LinkedList<>();
+        boolean[] visited = new boolean[rooms.size()];
+        // 访问 0 号房
+        visited[0] = true;
+        q.addLast(0);
+        while (!q.isEmpty()) {
+            int curRoomId = q.removeFirst();
+            List<Integer> room = rooms.get(curRoomId);
+            for (Integer key : room) {
+                if (!visited[key]) {
+                    visited[key] = true;
+                    q.addLast(key);
+                }
+            }
+        }
+        for (boolean v : visited) if (!v) return false;
+        return true;
+    }
+}
+```
+

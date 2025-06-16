@@ -4,10 +4,10 @@
 
 # Site
 title: Perry's Blog
-subtitle: 'tech & muse & sleep'
+subtitle: 'tech / muse / painting / reading'
 description: '...'
 keywords:
-author: Perry Yao
+author: peiyouyao
 language: en
 timezone: ''
 
@@ -102,5 +102,6 @@ theme: next
 ## Docs: https://hexo.io/docs/one-command-deployment
 deploy:
   type: 'git'
-  repo: https://github.com/PerryYao-GitHub/perryyao-github.github.io
+  repo: git@github.com:peiyouyao/peiyouyao.github.io.git  # in wsl, use ssh to deploy, because of FGW
+  # repo: https://github.com/peiyouyao/peiyouyao.github.io
   branch: main

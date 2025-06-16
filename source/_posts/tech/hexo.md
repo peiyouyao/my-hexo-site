@@ -34,10 +34,10 @@ categories: tech
 再重新启动检验
 
 ## 部署到 GitHub
-1. 新建一个git项目, 注意项目名必须是 `your_git_hub_name.github.io`; 例如 `perryyao-github.github.io`
+1. 新建一个git项目, 注意项目名必须是 `your_git_hub_name.github.io`; 例如 `peiyouyao.github.io`
 2. 在本地创建 git 仓库, 但是不太需要 push, 因为 `hexo d` 本质上就是 push
     ```bash
-    git remote add origin git@github.com:PerryYao-GitHub/perryyao-github.github.io.git
+    git remote add origin git@github.com:peiyouyao/peiyouyao.github.io.git
     git branch -M main
     git push -u origin main
     ```
@@ -48,7 +48,7 @@ categories: tech
    ## Docs: https://hexo.io/docs/one-command-deployment
    deploy:
      type: 'git'
-     repo: https://github.com/PerryYao-GitHub/perryyao-github.github.io
+     repo: https://github.com/peiyouyao/peiyouyao.github.io
      branch: main
    ```
 5. 执行 `hexo d`, 输入git账户密码
