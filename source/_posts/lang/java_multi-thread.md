@@ -1,5 +1,5 @@
 ---
-title: Multi-Thread
+title: Java Multi-Thread
 date: 2023-10-26 00:00:00
 tags: java
 categories: lang

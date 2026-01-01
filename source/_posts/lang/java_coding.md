@@ -1,32 +1,549 @@
 ---
-title: Arrays & Collections & Stream API
-date: 2023-08-19 00:00:00
+title: Java Coding
+date: 2023-09-13 00:00:00
 tags: java
 categories: lang
 ---
 
 ---
 
-# Arrays 工具类
+# Java泛型 (Generics)
 
-工具类中所有的方法都是静态方法
+数据类型参数化. 不使用泛型时, 要使用 `Object + instanceof `+ 强制类型转换, 很麻烦. 类型擦除: 泛型仅存在于编译中, 编译之后都会被搞成`Object`.
+
+## 定义泛型
+
+通常使用 `E T K V N ?` 来代表泛型
 
 ```java
-static <T> List<T> asList(T... a)
-static <T> T[] copyOf(T[] original, int newLength)
-static<T> T[] copyRangeOf(T[] original, int from, int to)
+E // Element 在容器中使用
+T // Type 普通的 Java 类
+K // Key
+V // Value
+? // 不确定的类型
 ```
 
-# Collections 工具类
-
-工具类中所有的方法都是静态方法
+## 泛型类
 
 ```java
-shuffle()
-reverse()
-fill()
-binarySearch()
-copy()
+public class Resp<T> {
+    private T data;
+    private String msg;
+    private int code;
+    
+    public void setData(T data) {
+        this.data = data;
+    }
+}
+```
+
+## 泛型接口
+
+```java
+public interface UserService<T> {
+    T login(UsernamePasswordDTO);
+}
+```
+
+## 泛型方法
+
+```java
+public <T> void setName(T name) { ... } // 在方法前定义要使用的泛型
+public <T> T getName(T name) { ... }
+public static <T> T f(T para) { ... } // 静态方法无法使用类上定义的泛型, 静态方法只能定义泛型方法
+```
+
+# Java包装类
+
+```java
+// 基本类型 -> 包装类
+boolean -> Boolean
+char -> Character
+---
+int -> Integer
+long -> Long
+float -> Float
+double -> Double
+byte -> Byte
+short -> Short
+```
+
+六个数字基本类型的包装类继承了 `Number 抽象类`, 它们实现了抽象方法:
+
+```java
+int intValue();
+long longValue();
+float floatValue();
+double doubleValue();
+short shortValue();
+byte byteValue();
+```
+
+以上是实现类型转化的, 例如 `Double d = new Double(3.14)`; `d` 中有 `intValue()` 方法, 可以转为 `int`
+
+```java
+Integer int1 = new Integer(1);
+Integer int2 = Integer.valueOf(2);  // 推荐
+
+int n1 = int1.intValue();
+
+// String 转 Integer 对象
+Integer int3 = new Integer("333");
+Integer int4 = Integer.parseInt("999");  // 推荐
+Integer int44 = Integer.valueOf("999");
+
+// Integer 转 String
+String str1 = int1.toString();
+
+Integer int5 = Integer.MAX_VALUE;
+Integer int6 = Integer.MIN_VALUE;
+```
+
+## 自动装箱拆箱
+
+```java
+Integer a = Integer.valueOf(3); // 装箱
+int b = a.intValue(); // 拆箱
+```
+
+## 包装类的缓存问题
+
+```java
+Integer n1 = 4000;
+Integer n2 = 4000;
+
+n1 == n2;  // false
+n1.equals(n2);  // true
+
+// 包装类的缓存问题  -128 <= n <= 127  直接取缓存数组中的元素 缓存了 Integer(-128) ... Integer(127), 相当于是一个对象池 (static) 只要使用 Integer, 就会制造一个static的缓存对象池
+Integer n3 = 123;
+Integer n4 = 123;
+n3 == n4;  // true
+n3.equals(n4);  // true
+```
+
+## 包装类数组的装箱拆箱
+
+### `int[] -> Integer[]`
+
+可以使用 `Arrays.stream()` 方法, 将 `int[]` 转换为流, 并使用 `boxed()` 方法将基本类型 `int` 转换为包装类型 `Integer`, 然后将其转换为数组:
+
+```java
+int[] intArray = {1, 2, 3, 4, 5};
+Integer[] integerArray = Arrays.stream(intArray).boxed().toArray(Integer[]::new);
+```
+
+### `Integer[] -> int[]`
+
+使用 `Arrays.stream()` 方法将 `Integer[]` 转换为流, 然后使用 `mapToInt()` 方法将流中的 `Integer` 元素转换为基本类型 `int`:
+
+```java
+Integer[] integerArray = {1, 2, 3, 4, 5};
+int[] intArray = Arrays.stream(integerArray).mapToInt(Integer::intValue)/* 或 mapToInt(x -> x) */.toArray();
+```
+
+# Java容器 (Collection)
+
+## 各容器关系图
+
+![collections](./java__collections.png)
+
+## `interface Iterable`
+
+```java
+default void forEach(Consumer<? super T> action);
+Iterator<T> iterator();
+```
+
+### `interface Iterator`
+
+```java
+boolean hasNext();
+T next();
+void remove();
+```
+
+```java
+// 使用 iterator 迭代 List
+Iterator<String> it = lst.iterator(); // 获取迭代器对象
+while (it.hasNext()) it.next();
+```
+
+## `interface Collection`
+
+```java
+int size();
+boolean isEmpty();
+void clear();
+
+boolean add(E e);
+boolean addAll(Collection<? extends E> c);
+
+boolean contains(Object o);
+boolean containsAll(Collection<?> c);
+
+boolean remove(Object o);
+boolean removeAll(Collection<?> c);
+boolean retainAll(Collection<?> c);
+
+default Stream<E> stream();
+Object[] toArray();
+default <T> T[] toArray(IntFunction<T[]> generator);
+<T> T[] toArray(T[] a);
+```
+
+## `interface List`
+
+```java
+boolean add(E e);
+void add(int idx, E e);
+boolean addAll(int index, Collection<? extends E> c);
+
+E get(int idx);
+E set(int idx, E e);
+
+E remove(int idx);
+default E removeFirst(); // jdk 21
+default E removeLast(); // jdk 21
+
+int indexOf(Object o);
+int lastIndexOf(Object o);
+List<E> subList(int fromIndex, int toIndex);
+
+// jdk 9+, returns an unmodifiable list
+static <E> List<E> of();
+static <E> List<E> of(E e1);
+static <E> List<E> of(E... elements);
+// 内容, 长度均不可变
+List<String> Notes=List.of("C", "#C/bD", "D", "#D/bE", "E", "F", "#F/bG", "G", "#G/bA", "A", "#A/bB", "B");
+```
+
+### `class ArrayList`
+
+底层数组实现, 查询效率高, 增删效率低, 线程不安全
+
+### `class LinkedList`
+
+双链表实现, 查询效率低, 增删效率高, 线程不安全
+
+### `class Vector`
+
+底层数组, 线程安全, 效率低 (所有方法都套上了 synchronized 关键字)
+
+### `class Stack`
+
+线程安全
+
+```java
+E peek();
+void push(E e);
+E pop();
+```
+
+## `interface Queue`
+
+```java
+boolean add(E e); // 入队, 满则抛异常
+boolean offer(E e); // 入队, 满则 return flase
+
+E remove(); // 出队, 空则抛异常
+E poll(); // 出队, 空则 return null
+
+E element(); // 获取队头, 空则抛异常
+E peek(); // 获取队头, 空则 return null
+```
+
+### `class PriorityQueue`
+
+```java
+// 默认是小顶堆, 可传入比较器自定义顺序
+PriorityQueue<Integer> pq = new PriorityQueue<>((a, b) -> b - a); // 大顶堆
+pq.offer(3);
+pq.offer(1);
+pq.offer(2);
+System.out.println(pq.poll()); // 3
+```
+
+## `interface Deque`
+
+```java
+void addFirst(E e); void addLast(E e); // 入队, 满则抛异常
+boolean offerFirst(E e); boolean offerLast(E e); // 入队, 满则 return flase
+
+E removeFirst(); E removeLast(); // 出队, 空则抛异常
+E pollFirst(); E pollLast(); // 出队, 空则 return null
+
+E getFirst(); E getLast(); // 获取队头/尾, 空则抛异常
+E peekFirst(); E peekLast(); // 获取队头/尾, 空则 return null
+```
+
+### `class LinkedList`
+
+允许元素为null
+
+### `class ArrayDeque`
+
+不允许元素为null
+
+## `interface Set`
+
+不可重复, 无序
+
+```java
+boolean add(E e);
+boolean	addAll(Collection<? extends E> c);
+
+boolean	contains(Object o);
+boolean	containsAll(Collection<?> c);
+
+boolean	remove(Object o);
+boolean	removeAll(Collection<?> c);
+```
+
+### `class HashSet`
+
+插入删除的时间复杂度为$O(1)$
+
+Hash 算法 | 散列算法 | mod n 运算
+
+HashSet 底层是 HashMap, HashMap 底层使用**数组**和**链表**实现存储
+
+当两个元素 Hash 值得到位置相同时, 会调用元素 `equals()` 方法, 如果相同则跳过, 不同则加到链表
+
+数组默认长度是 16, 数组中存储的是单链表
+
+```java
+// 使用 HashSet 存储自定义对象
+public class User {
+    public int id;
+    public String username;
+    
+    // 要重写 hashCode() 和 equals() 以便使用集合存储
+    public int hashCode() {
+        int code = username == null ? 0 : username.hashCode();
+        code = 31 * code + id;
+        return code;
+    }
+    
+    public boolean equals(Object o) {
+        if (o instanceof User) {
+            User user = (User) o;
+            return (user.id == this.id) && (user.username == this.username);
+        }
+        return false;
+    }
+}
+```
+
+### `class LinkedHashSet`
+
+可以保持元素加入集合的顺序 (但不能使用索引访问), 方法与`Set`完全一致
+
+## `interface SortedSet`
+
+```java
+Comparator<? super E> comparator();
+SortedSet<String> set = new TreeSet<>();
+System.out.println(set.comparator()); // 输出: null（使用自然顺序）
+
+E first();
+// 返回集合中的第一个(最小)元素(根据排序规则) | 若集合为空抛异常
+
+E last();
+// 返回集合中的第一个(最大)元素 | 若集合为空抛异常
+
+SortedSet<E> subSet(E fromElement, E toElement);
+// 返回从fromElement(包含)到toElement(不包含)的子集视图
+// 返回的子集是原集合的动态视图，对子集的修改会反映到原集合
+
+SortedSet<E> headSet(E toElement);
+// 返回从开头到toElement（不包含）的子集视图
+
+SortedSet<E> tailSet(E fromElement);
+// 返回从fromElement（包含）到末尾的子集视图
+```
+
+### `class TreeSet`
+
+允许对元素排序, 要给定排序规则. 插入删除的时间复杂度为$O(\log n)$.
+
+```java
+E ceiling(E e); // 返回大于或等于e的最小元素, 若无则返回null
+E floor(E e); // 返回小于或等于e的最大元素, 若无则返回null
+E higher(E e); // 返回严格大于e的最小元素, 若无则返回null
+E lower(E e); // 返回严格小于e的最大元素, 若无则返回null
+E pollFirst(); // 移除并返回第一个元素, 若为空返回null
+E pollLast(); // 移除并返回最后一个元素, 若为空返回null
+NavigableSet<E> descendingSet(); // 返回逆序视图
+Iterator<E> descendingIterator(); //返回逆序迭代器
+```
+
+```java
+//// 通过元素自身实现比较规则 compareTo() 方法
+public class User implements Comparable<User> {
+    public Integer id;
+    public String username;
+    
+    @Override
+    public int compareTo(User user) {  // 只有实现了 compareTo() 方法的类, 才可以 add 进 TreeSet
+        if (this.id < user.id) return -1;
+        if (this.id > user.id) return 1;
+        return this.username.compareTo(user.username);
+    }
+    
+    // 要有 hashCode 和 equals() 方法
+}
+
+//// 通过比较器指定比较规则
+public class UserComparator implements Comparator<User> {
+    @Override
+    public int compare(User u1, User u2) {
+        if (u1.id <= u2) return -1; // u1 先于 u2
+        return 1;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Set<User> set = new TreeMap<>(new UserComparator());
+    }
+}
+
+//// 使用lambda表达式代替指定比较器
+Set<User> set = new TreeMap<>((u1, u2) -> u1.id - u2.id);
+```
+
+## `interface Map`
+
+```java
+int size();
+boolean isEmpty();
+void clear();
+
+boolean	containsKey(Object key);
+boolean	containsValue(Object value);
+
+Set<Map.Entry<K,V>>	entrySet();
+Set<K> keySet();
+Collection<V> values();
+
+V get(Object key);
+default V getOrDefault(Object key, V defaultValue);
+V remove(Object key);
+default boolean	remove(Object key, Object value);
+V put(K key, V value);
+
+// 遍历 Map 的键
+for (Integer key : map.keySet()) { ... }
+
+// 遍历 Map 的值
+for (String value : map.values()) { ... }
+
+// 遍历 Map 的键值对
+for (Map.Entry<Integer, String> entry : map.entrySet()) { sout(entry.getKey(), entry.getValue()); }
+
+// forEach 遍历键值对
+map.forEach((key, value) -> sout(key, value));
+
+// Iterator 遍历键值对
+Iterator<Map.Entry<Integer, String>> iterator = map.entrySet().iterator();
+while (iterator.hasNext()) {
+    Map.Entry<Integer, String> entry = iterator.next();
+    sout(entry.getKey(), entry.getValue());
+}
+```
+
+### `class HashMap`
+
+### `class LinkedHashMap`
+
+## `interface SortedMap`
+
+```java
+// 补充额外操作
+```
+
+### `class TreeMap`
+
+可以对键排序, 要给定Key对象的排序规则
+
+# `Arrays`工具类
+
+```java
+// 工具类中所有的方法都是静态方法
+
+static <T> List<T> asList(T... a);
+
+// 八个基本类型都有对应的重载方法
+static int binarySearch(int[] a, int key);
+static int binarySearch(int[] a, int fromIndex, int toIndex, int key);
+static int binarySearch(Object[] a, int fromIndex, int toIndex, Object key);
+static int binarySearch(short[] a, int fromIndex, int toIndex, short key);
+static <T> int binarySearch(T[] a, int fromIndex, int toIndex, T key, Comparator<? super T> c);
+static <T> int binarySearch(T[] a, T key, Comparator<? super T> c);
+
+// newLength 要大于等于original.length, 超出部分补0
+static int[] copyOf(int[] original, int newLength);
+static <T> T[] copyOf(T[] original, int newLength);
+
+static int[] copyOfRange(int[] original, int from, int to);
+static <T> T[] copyOfRange(T[] original, int from, int to);
+
+static boolean deepEquals(Object[] a1, Object[] a2);
+static String deepToString(Object[] a); // 打印2D数组时用
+
+static boolean equals(int[] a, int[] a2);
+static boolean equals(Object[] a, Object[] a2);
+
+static void	fill(int[] a, int val);
+static void	fill(int[] a, int fromIndex, int toIndex, int val);
+static void	fill(Object[] a, Object val);
+static void	fill(Object[] a, int fromIndex, int toIndex, Object val);
+
+static void	sort(int[] a);
+static void	sort(int[] a, int fromIndex, int toIndex);
+static void	sort(Object[] a);
+static void	sort(Object[] a, int fromIndex, int toIndex);
+static <T> void	sort(T[] a, Comparator<? super T> c);
+static <T> void	sort(T[] a, int fromIndex, int toIndex, Comparator<? super T> c);
+
+static IntStream stream(int[] array);
+static IntStream stream(int[] array, int startInclusive, int endExclusive);
+static <T> Stream<T> stream(T[] array);
+static <T> Stream<T> stream(T[] array, int startInclusive, int endExclusive);
+```
+
+# `Collections`工具类
+
+```java
+static <T> boolean addAll(Collection<? super T> c, T... elements);
+
+static <T> int	binarySearch(List<? extends Comparable<? super T>> list, T key);
+static <T> int	binarySearch(List<? extends T> list, T key, Comparator<? super T> c);
+
+static <T> void	copy(List<? super T> dest, List<? extends T> src);
+
+static <T> List<T> emptyList();
+static <T> Set<T>	emptySet();
+static <E> SortedSet<E>	emptySortedSet();
+static <K,V> Map<K,V> emptyMap();
+static <K,V> SortedMap<K,V>	emptySortedMap();
+
+static <T> void	fill(List<? super T> list, T obj);
+
+static <T extends Object & Comparable<? super T>> T	max(Collection<? extends T> coll);
+static <T> T max(Collection<? extends T> coll, Comparator<? super T> comp);
+static <T extends Object & Comparable<? super T>> T min(Collection<? extends T> coll);
+static <T> T min(Collection<? extends T> coll, Comparator<? super T> comp);
+
+static void reverse(List<?> list);
+
+static void	shuffle(List<?> list);
+
+static <T extends Comparable<? super T>> void sort(List<T> list);
+static <T> void	sort(List<T> list, Comparator<? super T> c);
+
+static void	swap(List<?> list, int i, int j);
 ```
 
 # Array <=> Collection
@@ -129,7 +646,7 @@ String[] array = list.stream().toArray(String[]::new);
 
 可以使用 `Comparator` 接口, 也可以用 lambda 表达式来简化代码. 以下是几种常见的用法：
 
-## 使用 `Comparator` 接口的自定义排序
+## 使用 `interface Comparator<T>` 接口的自定义排序
 
 我们可以创建一个实现 `Comparator` 接口的类来定义排序规则. 
 
@@ -148,7 +665,6 @@ public class CustomSortExample {
         
         // 使用自定义 Comparator 进行排序
         Arrays.sort(names, lengthComparator);
-        
         System.out.println(Arrays.toString(names));
     }
 }

@@ -47,8 +47,6 @@ categories: lang
                        .toArray(int[][]::new);
   ```
 
-
-
 ## 字符串 String
 
 - 求长度 `str.length()`
@@ -71,8 +69,6 @@ categories: lang
 - **数字转化为字符串** `String.valueOf(num)`
 - 翻转字符串 `String reversed = new StringBuilder("hello").reverse().toString();`
 
-
-
 ## 可变字符串 StringBuilder
 
 - 在末尾添加新字符（串） `sb.append(c)` `sb.append(str)`
@@ -83,8 +79,6 @@ categories: lang
 - 在第i个字符之前插入字符串 `sb.insert(i, str)`
 - 反转字符串 `sb.reverse()`
 - 转化为String `sb.toString()`
-
-
 
 ## 链表 List
 
@@ -198,6 +192,3 @@ categories: lang
 - 获取键值对的键 `entry.getKey()`
 - 获取键值对的值 `entry.getValue()`
 - 修改键值对的值 `entry.setValue(val)`
-
-
-

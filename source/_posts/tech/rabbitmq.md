@@ -1,0 +1,7 @@
+---
+title: Rabbit MQ
+date: 2025-07-23 00:00:00
+tags: mq
+categories: tech
+---
+

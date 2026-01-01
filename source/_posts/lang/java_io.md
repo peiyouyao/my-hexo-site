@@ -1,5 +1,5 @@
 ---
-title: Exception & IO
+title: Java Exception & IO
 date: 2023-09-09 00:00:00
 tags: java
 categories: lang
